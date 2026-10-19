@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ánima: El Cuaderno del Navegante</title>
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para iconos minimalistas -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fuente Inter y Nunito (más amigable para niños) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Tone.js para Paisajes Sonoros y Efectos (Sintetizador Web) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%); /* Cielo suave */
+            color: #333;
+        }
+
+        /* La "colina" o horizonte curvo basado en la imagen de referencia */
+        .horizon-curve {
+            position: absolute;
+            top: 45vh; /* Ajuste para la altura del horizonte */
+            left: -10%;
+            width: 120%;
+            height: 1000px;
+            background: linear-gradient(180deg, #9b6dff 0%, #6a44cc 100%); /* Color violeta suave */
+            border-radius: 50% 50% 0 0;
+            z-index: 1;
+            box-shadow: inset 0px 20px 30px rgba(255,255,255,0.2);
+        }
+
+        /* Nubes flotantes minimalistas */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50px;
+            opacity: 0.8;
+            animation: float 20s infinite linear;
+            z-index: 0;
+        }
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+        
+        .cloud-1 { width: 120px; height: 40px; top: 15%; left: -150px; animation-duration: 35s; }
+        .cloud-1::before { width: 50px; height: 50px; top: -20px; left: 15px; }
+        .cloud-1::after { width: 40px; height: 40px; top: -10px; left: 55px; }
+
+        .cloud-2 { width: 80px; height: 25px; top: 25%; left: -100px; animation-duration: 45s; animation-delay: -10s; }
+        .cloud-2::before { width: 35px; height: 35px; top: -15px; left: 10px; }
+        .cloud-2::after { width: 25px; height: 25px; top: -5px; left: 35px; }
+
+        @keyframes float {
+            0% { transform: translateX(-150px); }
+            100% { transform: translateX(120vw); }
+        }
+
+        /* Contenedor principal interactivo (encima de la colina) */
+        .stage {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Personajes (Minimalistas, hechos con CSS/SVG) */
+        .character {
+            transition: transform 0.3s ease, filter 0.3s ease;
+            cursor: pointer;
+        }
+        .character:hover {
+            transform: scale(1.05) translateY(-10px);
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+        }
+
+        /* Globos de diálogo */
+        .speech-bubble {
+            position: absolute;
+            background: white;
+            border-radius: 20px;
+            padding: 15px 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #4a5568;
+            max-width: 250px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            z-index: 20;
+        }
+        .speech-bubble.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            margin-left: -10px;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: white transparent transparent transparent;
+        }
+
+        /* UI de actividades (Cartas inferiores) */
+        .activity-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        .activity-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+            border-color: #9b6dff;
+        }
+
+        /* Pantalla modal para interacciones */
+        #interaction-modal {
+            backdrop-filter: blur(5px);
+            transition: opacity 0.3s ease;
+        }
+
+        /* Botón animado */
+        .btn-breathe {
+            animation: pulse-breathe 4s infinite ease-in-out;
+        }
+        @keyframes pulse-breathe {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(155, 109, 255, 0.6); }
+            100% { transform: scale(1); }
+        }
+
+        /* Estilos para la Corpografía interactiva */
+        .body-part {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            stroke: white;
+            stroke-width: 2px;
+        }
+        .body-part:hover {
+            filter: drop-shadow(0 0 8px rgba(155, 109, 255, 0.5));
+            transform: scale(1.02);
+            transform-origin: center;
+        }
+
+        /* Ocultar barra de desplazamiento */
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="relative">
+
+    <!-- Fondo Atmosférico -->
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-1" style="top: 30%; left: -300px; animation-duration: 40s;"></div>
+
+    <!-- Horizonte Curvo (La colina violeta de la referencia) -->
+    <div class="horizon-curve"></div>
+
+    <!-- Contenedor Principal (Escenario) -->
+    <div class="stage w-full">
+        
+        <!-- Encabezado y Logo (Estilo minimalista) -->
+        <header class="w-full flex justify-between items-center p-6 relative z-20">
+            <div class="flex items-center gap-3 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm cursor-pointer" onclick="showInfo()">
+                <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white text-xl shadow-inner">
+                    <i class="fa-solid fa-compass"></i>
+                </div>
+                <h1 class="text-2xl font-black text-purple-700 tracking-tight">Ánima</h1>
+                <i class="fa-solid fa-circle-info text-gray-400 ml-2 hover:text-purple-500"></i>
+            </div>
+            
+            <nav class="flex gap-4">
+                <button class="bg-white/80 hover:bg-white text-purple-700 font-bold py-2 px-6 rounded-full shadow-sm transition-colors" onclick="openProfile()">
+                    <i class="fa-solid fa-user-astronaut mr-2"></i> Mi Navegante
+                </button>
+            </nav>
+        </header>
+
+        <!-- Modal de Información del Proyecto -->
+        <div id="info-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl relative">
+                <button onclick="hideInfo()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <h2 class="text-3xl font-black text-purple-600 mb-4">¿Qué es el Proyecto Ánima?</h2>
+                <div class="text-gray-600 text-lg space-y-4 font-inter leading-relaxed">
+                    <p><strong>Para los Navegantes (Niños):</strong> Ánima es tu mundo interior. Aquí aprenderemos a escuchar a los "Guardianes" (tus emociones) para volvernos más fuertes y sabios.</p>
+                    <p><strong>Para los Guías (Padres/Educadores):</strong> Este es un Hub de Inteligencia Emocional basado en <em>Minimalismo Cognitivo</em>. Sin sobreestimulación visual. Utilizamos interacciones simples y paisajes sonoros para enseñar <strong>Consciencia</strong> y <strong>Autorregulación Emocional</strong>.</p>
+                    <ul class="list-disc pl-6 text-gray-500 text-base">
+                        <li>Basado en el Aprendizaje Experiencial (David Kolb).</li>
+                        <li>Convierte al niño en un Prosumidor activo de su bienestar.</li>
+                        <li>Fomenta el anclaje seguro frente a la ansiedad o frustración.</li>
+                    </ul>
+                </div>
+                <button onclick="hideInfo()" class="mt-8 w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition-colors">
+                    ¡Comenzar la Aventura!
+                </button>
+            </div>
+        </div>
+
+        <!-- Área Central Interactiva (Encima de la colina) -->
+        <main class="flex-grow flex items-center justify-center relative -mt-20">
+            
+            <!-- Personaje 1: Lumi (La Guía Emocional) -->
+            <div class="relative mx-8 mt-20" id="char-lumi">
+                <!-- Globo de Diálogo de Lumi -->
+                <div id="bubble-lumi" class="speech-bubble -top-24 left-1/2 -translate-x-1/2 w-48">
+                    ¿Cómo te sientes hoy, Navegante?
+                </div>
+                <!-- Gráfico de Lumi (Círculo brillante con cara) -->
+                <div class="character w-40 h-40 bg-gradient-to-tr from-yellow-300 to-orange-200 rounded-full flex flex-col items-center justify-center shadow-[0_0_40px_rgba(253,224,71,0.5)] border-4 border-white" onclick="interactLumi()">
+                    <!-- Ojos -->
+                    <div class="flex gap-4 mb-2">
+                        <div class="w-3 h-5 bg-gray-700 rounded-full"></div>
+                        <div class="w-3 h-5 bg-gray-700 rounded-full"></div>
+                    </div>
+                    <!-- Sonrisa -->
+                    <svg width="40" height="20" viewBox="0 0 40 20">
+                        <path d="M 5 5 Q 20 20 35 5" fill="none" stroke="#374151" stroke-width="3" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <p class="text-white text-center mt-4 font-bold text-xl drop-shadow-md">Lumi</p>
+            </div>
+
+            <!-- Centro: Pizarra interactiva / Portal -->
+            <div class="relative z-10 w-80 h-56 bg-white/95 rounded-2xl shadow-2xl border-4 border-purple-200 flex flex-col items-center justify-center p-6 cursor-pointer hover:scale-105 transition-transform" onclick="startCheckIn()">
+                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-play text-2xl text-purple-500 ml-1"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 text-center">Inicia tu<br>Misión de Hoy</h3>
+                <p class="text-sm text-gray-500 mt-2">Haz clic aquí</p>
+            </div>
+
+            <!-- Personaje 2: Nova (El Explorador Práctico) -->
+            <div class="relative mx-8 mt-20" id="char-nova">
+                <!-- Globo de Diálogo de Nova -->
+                <div id="bubble-nova" class="speech-bubble -top-24 left-1/2 -translate-x-1/2 w-56">
+                    ¡Tengo herramientas si necesitas calmarte!
+                </div>
+                <!-- Gráfico de Nova (Cuadrado redondeado azul) -->
+                <div class="character w-32 h-36 bg-gradient-to-tr from-cyan-400 to-blue-300 rounded-3xl flex flex-col items-center justify-center shadow-lg border-4 border-white" onclick="interactNova()">
+                    <!-- Gafas/Ojos -->
+                    <div class="flex gap-1 mb-2 bg-gray-700 p-1 rounded-lg">
+                        <div class="w-6 h-6 bg-white rounded-full"></div>
+                        <div class="w-6 h-6 bg-white rounded-full"></div>
+                    </div>
+                    <!-- Boca (recta) -->
+                    <div class="w-8 h-1 bg-gray-700 rounded-full mt-1"></div>
+                </div>
+                <p class="text-white text-center mt-4 font-bold text-xl drop-shadow-md">Nova</p>
+            </div>
+        </main>
+
+        <!-- Menú Inferior de Actividades (Carrusel) -->
+        <footer class="w-full bg-white/10 p-6 z-20 pb-10">
+            <div class="max-w-5xl mx-auto">
+                <h4 class="text-white font-bold mb-4 ml-2 drop-shadow-md">El Archivo del Navegante</h4>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    
+                    <!-- Tarjeta 1: Audio / Paisaje Sonoro -->
+                    <div class="activity-card flex flex-col items-center justify-center cursor-pointer" onclick="playAudioScape()">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center text-xl mb-2">
+                            <i class="fa-solid fa-headphones-simple"></i>
+                        </div>
+                        <h5 class="font-bold text-gray-700 text-sm">Viaje Sonoro</h5>
+                        <p class="text-xs text-gray-400 text-center">Refugio del Mar</p>
+                    </div>
+
+                    <!-- Tarjeta 2: Entrenamiento (Respiración) -->
+                    <div class="activity-card flex flex-col items-center justify-center cursor-pointer" onclick="openBreatheExercise()">
+                        <div class="w-12 h-12 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-xl mb-2">
+                            <i class="fa-solid fa-wind"></i>
+                        </div>
+                        <h5 class="font-bold text-gray-700 text-sm">Entrenamiento</h5>
+                        <p class="text-xs text-gray-400 text-center">Respiración</p>
+                    </div>
+
+                    <!-- Tarjeta 3: Comunidad / Historias -->
+                    <div class="activity-card flex flex-col items-center justify-center cursor-pointer" onclick="openStories()">
+                        <div class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-xl mb-2">
+                            <i class="fa-solid fa-images"></i>
+                        </div>
+                        <h5 class="font-bold text-gray-700 text-sm">Historias</h5>
+                        <p class="text-xs text-gray-400 text-center">Otros Navegantes</p>
+                    </div>
+
+                    <!-- Tarjeta 4: Evaluación / Logros -->
+                    <div class="activity-card flex flex-col items-center justify-center cursor-pointer bg-purple-50" onclick="openMap()">
+                        <div class="w-12 h-12 bg-purple-200 text-purple-600 rounded-full flex items-center justify-center text-xl mb-2">
+                            <i class="fa-solid fa-medal"></i>
+                        </div>
+                        <h5 class="font-bold text-gray-700 text-sm">Mi Cartografía</h5>
+                        <p class="text-xs text-purple-400 text-center">¡Nuevo Logro!</p>
+                    </div>
+
+                    <!-- Tarjeta 5: Corpografía (NUEVA) -->
+                    <div class="activity-card flex flex-col items-center justify-center cursor-pointer bg-orange-50 border-orange-200" onclick="openCorpography()">
+                        <div class="w-12 h-12 bg-orange-200 text-orange-600 rounded-full flex items-center justify-center text-xl mb-2">
+                            <i class="fa-solid fa-child-reaching"></i>
+                        </div>
+                        <h5 class="font-bold text-gray-700 text-sm">Mi Corpografía</h5>
+                        <p class="text-xs text-orange-500 text-center">¿Dónde lo sientes?</p>
+                    </div>
+
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- OVERLAYS / MODALES INTERACTIVOS -->
+
+    <!-- Modal 1: Check-in Emocional (La interacción principal) -->
+    <div id="checkin-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60" style="backdrop-filter: blur(10px);">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl text-center">
+            <h2 class="text-2xl font-black text-gray-800 mb-2">¡Hola, Navegante!</h2>
+            <p class="text-gray-500 mb-8">¿Cómo se siente tu cuerpo en este momento?</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <!-- Opciones que representan Ecos/Emociones sin decir el nombre directamente -->
+                <button class="bg-red-50 hover:bg-red-100 border-2 border-red-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('ira')">
+                    <i class="fa-solid fa-fire text-3xl text-red-500 mb-2"></i>
+                    <span class="font-bold text-red-700">Caliente y rápido</span>
+                </button>
+                <button class="bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('tristeza')">
+                    <i class="fa-solid fa-droplet text-3xl text-blue-500 mb-2"></i>
+                    <span class="font-bold text-blue-700">Pesado y lento</span>
+                </button>
+                <button class="bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('miedo')">
+                    <i class="fa-solid fa-bolt text-3xl text-purple-500 mb-2"></i>
+                    <span class="font-bold text-purple-700">Temblando</span>
+                </button>
+                <button class="bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('alegria')">
+                    <i class="fa-solid fa-sun text-3xl text-yellow-500 mb-2"></i>
+                    <span class="font-bold text-yellow-700">Ligero y brillante</span>
+                </button>
+            </div>
+            
+            <button onclick="closeModal('checkin-modal')" class="text-gray-400 hover:text-gray-700 font-bold underline">
+                Cerrar por ahora
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal 2: Mensaje de Validación (Resultado del Check-in) -->
+    <div id="feedback-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60" style="backdrop-filter: blur(10px);">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl text-center">
+            <div id="feedback-icon" class="text-5xl mb-4"></div>
+            <h2 id="feedback-title" class="text-2xl font-black text-gray-800 mb-4"></h2>
+            <p id="feedback-text" class="text-gray-600 text-lg mb-8"></p>
+            
+            <button onclick="openBreatheExercise(true)" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 rounded-xl transition-colors mb-3">
+                Hacer ejercicio de anclaje
+            </button>
+            <button onclick="closeModal('feedback-modal')" class="text-gray-400 hover:text-gray-700 font-bold underline">
+                Volver al menú
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal 3: Ejercicio de Respiración (Autorregulación) -->
+    <div id="breathe-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/90">
+        <div class="text-center">
+            <h2 id="breathe-instruction" class="text-3xl font-black text-white mb-12">Prepárate...</h2>
+            
+            <!-- Círculo de respiración -->
+            <div id="breathe-circle" class="w-48 h-48 bg-purple-500/30 border-4 border-purple-400 rounded-full mx-auto flex items-center justify-center shadow-[0_0_50px_rgba(168,85,247,0.5)] transition-all duration-[4000ms] ease-in-out transform scale-50">
+                <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-leaf text-3xl text-purple-500"></i>
+                </div>
+            </div>
+
+            <button onclick="stopBreatheExercise()" class="mt-16 bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-6 rounded-full transition-colors border border-white/50">
+                Terminar
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal 4: Mensaje Genérico -->
+    <div id="message-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60" style="backdrop-filter: blur(10px);">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl text-center border-b-4 border-purple-500">
+            <div id="message-icon" class="text-5xl mb-4 text-purple-500"><i class="fa-solid fa-star"></i></div>
+            <h2 id="message-title" class="text-2xl font-black text-gray-800 mb-4"></h2>
+            <p id="message-text" class="text-gray-600 text-lg mb-8 font-medium"></p>
+            <button onclick="closeModal('message-modal')" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition-colors">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal 5: Viaje Sonoro (Paisaje Acústico) -->
+    <div id="audio-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/95 backdrop-blur-md">
+        <div class="text-center w-full max-w-md">
+            <h2 class="text-3xl font-black text-white mb-2">Refugio del Mar</h2>
+            <p class="text-blue-200 mb-16 font-medium text-lg">Cierra los ojos. Imagina que las olas se llevan el peso...</p>
+            
+            <div class="relative w-56 h-56 mx-auto flex items-center justify-center mb-16">
+                <!-- Ondas de sonido animadas simulando respiración oceánica -->
+                <div class="absolute inset-0 bg-blue-500/20 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+                <div class="absolute inset-6 bg-blue-400/30 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]" style="animation-delay: 0.8s;"></div>
+                <div class="absolute inset-12 bg-blue-300/40 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]" style="animation-delay: 1.6s;"></div>
+                
+                <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center z-10 shadow-[0_0_30px_rgba(59,130,246,0.5)] cursor-pointer hover:scale-105 transition-transform" onclick="toggleAudio()">
+                    <i id="audio-icon" class="fa-solid fa-pause text-4xl text-blue-500"></i>
+                </div>
+            </div>
+
+            <button onclick="closeModal('audio-modal')" class="text-gray-400 hover:text-white font-bold underline transition-colors">
+                Volver a la base
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal 6: Historias / Comunidad (Validación por pares) -->
+    <div id="stories-modal" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-yellow-50/95 backdrop-blur-sm">
+        <div class="max-w-4xl w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-3xl md:text-4xl font-black text-yellow-600"><i class="fa-solid fa-tree mr-2"></i> El Árbol de las Historias</h2>
+                <button onclick="closeModal('stories-modal')" class="text-gray-500 hover:text-gray-800 text-3xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-gray-600 mb-8 text-lg font-medium">Descubre cómo otros Navegantes ayudan a sus Guardianes. ¡No estás solo!</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Historia 1 -->
+                <div class="bg-white p-6 rounded-3xl shadow-lg border-2 border-yellow-100 transform rotate-1 hover:rotate-0 transition-transform">
+                    <div class="w-full h-32 bg-red-50 rounded-xl mb-4 flex items-center justify-center border-2 border-dashed border-red-200">
+                        <i class="fa-solid fa-fire text-4xl text-red-400 mr-4"></i>
+                        <i class="fa-solid fa-arrow-right text-gray-300 mx-2"></i>
+                        <i class="fa-solid fa-bed text-4xl text-purple-400 ml-4"></i>
+                    </div>
+                    <p class="text-gray-700 font-bold text-lg leading-tight">"Cuando siento a mi Guardián de la Frontera (Ira), abrazo fuerte mi almohada hasta que se hace pequeño."</p>
+                    <div class="mt-4 flex items-center gap-2">
+                        <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-blue-600 font-bold">L</div>
+                        <p class="text-sm text-yellow-600 font-black">Navegante Leo, 8 años</p>
+                    </div>
+                </div>
+                
+                <!-- Historia 2 -->
+                <div class="bg-white p-6 rounded-3xl shadow-lg border-2 border-yellow-100 transform -rotate-1 hover:rotate-0 transition-transform">
+                    <div class="w-full h-32 bg-blue-50 rounded-xl mb-4 flex items-center justify-center border-2 border-dashed border-blue-200">
+                        <i class="fa-solid fa-droplet text-4xl text-blue-400 mr-4"></i>
+                        <i class="fa-solid fa-arrow-right text-gray-300 mx-2"></i>
+                        <i class="fa-solid fa-music text-4xl text-green-400 ml-4"></i>
+                    </div>
+                    <p class="text-gray-700 font-bold text-lg leading-tight">"Si el Refugio (Tristeza) es muy pesado, canto mi canción favorita y me siento más ligera."</p>
+                    <div class="mt-4 flex items-center gap-2">
+                        <div class="w-8 h-8 bg-pink-200 rounded-full flex items-center justify-center text-pink-600 font-bold">M</div>
+                        <p class="text-sm text-yellow-600 font-black">Navegante Mia, 7 años</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-10 text-center">
+                <button class="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-black py-4 px-8 rounded-full shadow-md transition-transform hover:scale-105" onclick="showMessage('¡Historia enviada!', 'Tu historia será revisada por los Guías y pronto aparecerá en el Árbol.', 'fa-solid fa-envelope-open-text text-yellow-500')">
+                    <i class="fa-solid fa-pencil mr-2"></i> Compartir mi historia
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 7: Cartografía Emocional -->
+    <div id="map-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/70 backdrop-blur-sm">
+        <div class="bg-white rounded-[2.5rem] max-w-2xl w-full p-8 shadow-2xl relative overflow-hidden">
+            <!-- Decoración de fondo -->
+            <div class="absolute -right-16 -top-16 w-48 h-48 bg-purple-100 rounded-full opacity-50"></div>
+            <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-blue-50 rounded-full opacity-50"></div>
+            
+            <button onclick="closeModal('map-modal')" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600 text-2xl z-10 bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <h2 class="text-3xl font-black text-purple-700 mb-1 relative z-10">Mi Cartografía</h2>
+            <p class="text-gray-500 mb-8 relative z-10 font-medium">El mapa de tus emociones descubiertas esta semana.</p>
+            
+            <div class="flex flex-col md:flex-row gap-6 relative z-10">
+                <!-- Insignia Principal (Logro positivo) -->
+                <div class="flex-1 bg-gradient-to-b from-purple-50 to-white rounded-3xl p-6 text-center border-2 border-purple-100 flex flex-col items-center justify-center shadow-sm">
+                    <div class="w-28 h-28 bg-gradient-to-tr from-purple-500 to-pink-400 rounded-full flex items-center justify-center shadow-[0_10px_25px_rgba(168,85,247,0.4)] mb-4 text-white text-5xl border-4 border-white transform hover:scale-110 transition-transform cursor-pointer">
+                        <i class="fa-solid fa-shield-heart"></i>
+                    </div>
+                    <h3 class="font-black text-xl text-purple-800">Escudo Valiente</h3>
+                    <p class="text-sm text-purple-600 mt-2 font-medium">Reconociste el Miedo y usaste la respiración para calmarlo. ¡Eres muy fuerte!</p>
+                </div>
+                
+                <!-- Estadísticas / Camino -->
+                <div class="flex-1 flex flex-col justify-center gap-4">
+                    <div class="bg-white rounded-2xl p-4 flex items-center gap-4 border-2 border-green-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-wind"></i></div>
+                        <div>
+                            <p class="text-xs text-green-500 font-bold uppercase tracking-wider">Entrenamientos</p>
+                            <p class="text-lg font-black text-gray-700">3 Respiraciones completas</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 flex items-center gap-4 border-2 border-blue-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl"><i class="fa-solid fa-compass"></i></div>
+                        <div>
+                            <p class="text-xs text-blue-500 font-bold uppercase tracking-wider">Guardianes Visitados</p>
+                            <p class="text-lg font-black text-gray-700">La Frontera (Ira)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 8: Corpografía (Mapeo Corporal) -->
+    <div id="corpography-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-orange-50/95 backdrop-blur-md">
+        <div class="max-w-3xl w-full bg-white rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden flex flex-col md:flex-row gap-8">
+            <button onclick="closeModal('corpography-modal')" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600 text-2xl z-20 bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <!-- Silueta Interactiva -->
+            <div class="flex-1 flex flex-col items-center justify-center relative z-10">
+                <h2 class="text-2xl font-black text-orange-600 mb-2">Tu Corpografía</h2>
+                <p class="text-gray-500 text-sm mb-6 text-center">Toca una parte de tu cuerpo y cuéntanos qué Guardián vive ahí hoy.</p>
+                
+                <svg viewBox="0 0 100 220" class="w-56 h-auto drop-shadow-xl overflow-visible">
+                    <!-- Cabeza -->
+                    <circle id="body-cabeza" cx="50" cy="30" r="18" class="body-part fill-gray-200" onclick="selectBodyPart('body-cabeza', 'la Cabeza')" />
+                    <!-- Pecho -->
+                    <rect id="body-pecho" x="30" y="55" width="40" height="35" rx="12" class="body-part fill-gray-200" onclick="selectBodyPart('body-pecho', 'el Pecho')" />
+                    <!-- Estómago -->
+                    <rect id="body-estomago" x="32" y="95" width="36" height="35" rx="12" class="body-part fill-gray-200" onclick="selectBodyPart('body-estomago', 'el Estómago')" />
+                    <!-- Brazo Izquierdo -->
+                    <rect id="body-brazo-izq" x="10" y="60" width="14" height="45" rx="7" transform="rotate(20 17 60)" class="body-part fill-gray-200" onclick="selectBodyPart('body-brazo-izq', 'el Brazo Izquierdo')" />
+                    <!-- Brazo Derecho -->
+                    <rect id="body-brazo-der" x="76" y="60" width="14" height="45" rx="7" transform="rotate(-20 83 60)" class="body-part fill-gray-200" onclick="selectBodyPart('body-brazo-der', 'el Brazo Derecho')" />
+                    <!-- Pierna Izquierda -->
+                    <rect id="body-pierna-izq" x="32" y="135" width="14" height="60" rx="7" class="body-part fill-gray-200" onclick="selectBodyPart('body-pierna-izq', 'la Pierna Izquierda')" />
+                    <!-- Pierna Derecha -->
+                    <rect id="body-pierna-der" x="54" y="135" width="14" height="60" rx="7" class="body-part fill-gray-200" onclick="selectBodyPart('body-pierna-der', 'la Pierna Derecha')" />
+                </svg>
+            </div>
+
+            <!-- Panel de Selección de Emoción (Se muestra al hacer clic en una parte) -->
+            <div id="emotion-selector-panel" class="flex-1 flex flex-col justify-center opacity-30 pointer-events-none transition-opacity duration-300 relative z-10 bg-gray-50 p-6 rounded-3xl border-2 border-gray-100">
+                <h3 id="selected-part-title" class="text-xl font-bold text-gray-700 mb-4 text-center">Selecciona una parte primero</h3>
+                
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <button class="bg-red-50 hover:bg-red-100 border-2 border-red-200 p-3 rounded-xl flex items-center gap-2 transition-transform hover:scale-105" onclick="assignEmotionToBody('red', 'Ira')">
+                        <i class="fa-solid fa-fire text-red-500 text-xl"></i> <span class="font-bold text-red-700 text-sm">Fuego (Ira)</span>
+                    </button>
+                    <button class="bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 p-3 rounded-xl flex items-center gap-2 transition-transform hover:scale-105" onclick="assignEmotionToBody('blue', 'Tristeza')">
+                        <i class="fa-solid fa-droplet text-blue-500 text-xl"></i> <span class="font-bold text-blue-700 text-sm">Agua (Tristeza)</span>
+                    </button>
+                    <button class="bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 p-3 rounded-xl flex items-center gap-2 transition-transform hover:scale-105" onclick="assignEmotionToBody('purple', 'Miedo')">
+                        <i class="fa-solid fa-bolt text-purple-500 text-xl"></i> <span class="font-bold text-purple-700 text-sm">Rayo (Miedo)</span>
+                    </button>
+                    <button class="bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 p-3 rounded-xl flex items-center gap-2 transition-transform hover:scale-105" onclick="assignEmotionToBody('yellow', 'Alegría')">
+                        <i class="fa-solid fa-sun text-yellow-500 text-xl"></i> <span class="font-bold text-yellow-700 text-sm">Luz (Alegría)</span>
+                    </button>
+                    <!-- Opción para borrar -->
+                    <button class="col-span-2 bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold p-2 rounded-xl text-sm transition-colors mt-2" onclick="assignEmotionToBody('gray', 'Nada')">
+                        <i class="fa-solid fa-eraser"></i> Limpiar esta zona
+                    </button>
+                </div>
+                
+                <div class="mt-auto">
+                    <p class="text-xs text-gray-500 italic text-center">Tu cuerpo es el mapa de tus aventuras. Pintarlo te ayuda a entenderte mejor.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lógica de Interacción -->
+    <script>
+        // --- Motor de Audio (Tone.js) ---
+        let audioInitialized = false;
+        let uiSynth;
+        let oceanSynth, oceanFilter, oceanLFO;
+
+        // Inicializar el contexto de audio tras la primera interacción del usuario
+        async function initAudioEngine() {
+            if (audioInitialized) return;
+            await Tone.start(); // Requerido por navegadores para desbloquear audio
+            
+            // Sintetizador para sonidos de UI (Clicks suaves, campanas)
+            uiSynth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.05, decay: 0.2, sustain: 0.1, release: 1 }
+            }).toDestination();
+            uiSynth.volume.value = -15; // Volumen bajo, no invasivo
+
+            // Motor de Paisaje Sonoro (Océano relajante usando ruido rosa)
+            oceanSynth = new Tone.Noise("pink");
+            oceanFilter = new Tone.Filter(300, "lowpass").toDestination();
+            oceanSynth.connect(oceanFilter);
+            
+            // Un LFO para modular el filtro y dar sensación de olas respirando
+            oceanLFO = new Tone.LFO(0.12, 100, 800); // Frecuencia muy baja para olas largas
+            oceanLFO.connect(oceanFilter.frequency);
+            
+            oceanSynth.volume.value = -12;
+            
+            audioInitialized = true;
+        }
+
+        function playTapSound() {
+            if (!audioInitialized) initAudioEngine();
+            if (uiSynth) uiSynth.triggerAttackRelease("C5", "16n");
+        }
+
+        function playSuccessSound() {
+            if (!audioInitialized) initAudioEngine();
+            if (uiSynth) uiSynth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "4n");
+        }
+
+        // --- Gestión de Información ---
+        function showInfo() {
+            document.getElementById('info-modal').classList.remove('hidden');
+        }
+        function hideInfo() {
+            document.getElementById('info-modal').classList.add('hidden');
+        }
+
+        // Mostrar información al cargar por primera vez
+        window.onload = () => {
+            setTimeout(showInfo, 500);
+        };
+
+        // --- Interacción con Personajes ---
+        const lumiPhrases = [
+            "¿Cómo te sientes hoy, Navegante?",
+            "Todas las emociones son guardianes.",
+            "Si el eco es muy fuerte, respiremos.",
+            "¡Eres muy valiente por mirar hacia adentro!"
+        ];
+        
+        const novaPhrases = [
+            "¡Tengo herramientas si necesitas calmarte!",
+            "¿Quieres intentar la respiración 4-4?",
+            "El cuerpo siempre avisa primero.",
+            "¡Vamos a mover esa energía!"
+        ];
+
+        function showBubble(bubbleId, phrasesArray) {
+            const bubble = document.getElementById(bubbleId);
+            const randomPhrase = phrasesArray[Math.floor(Math.random() * phrasesArray.length)];
+            bubble.innerText = randomPhrase;
+            
+            // Ocultar todas las burbujas primero
+            document.querySelectorAll('.speech-bubble').forEach(b => b.classList.remove('active'));
+            
+            // Mostrar la seleccionada
+            bubble.classList.add('active');
+            
+            // Ocultar después de 4 segundos
+            setTimeout(() => {
+                bubble.classList.remove('active');
+            }, 4000);
+        }
+
+        function interactLumi() { showBubble('bubble-lumi', lumiPhrases); }
+        function interactNova() { showBubble('bubble-nova', novaPhrases); }
+
+        // --- Sistema de Modales ---
+        function closeModal(id) {
+            playTapSound();
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // Función centralizada para mensajes amigables (Reemplaza los alert)
+        function showMessage(title, text, iconClass = 'fa-solid fa-star text-purple-500') {
+            playTapSound();
+            document.getElementById('message-icon').innerHTML = `<i class="${iconClass}"></i>`;
+            document.getElementById('message-modal').classList.remove('hidden');
+        }
+
+        // Abrir secciones secundarias
+        function openProfile() {
+            playTapSound();
+            showMessage('Tu Traje Espacial', 'Pronto podrás personalizar los colores de tu traje de Navegante y elegir a tu compañero de viaje.', 'fa-solid fa-user-astronaut text-purple-600');
+        }
+
+        function openStories() {
+            playTapSound();
+            document.getElementById('stories-modal').classList.remove('hidden');
+        }
+
+        function openMap() {
+            playTapSound();
+            document.getElementById('map-modal').classList.remove('hidden');
+        }
+
+        // --- Lógica del Check-In Emocional ---
+        function startCheckIn() {
+            initAudioEngine(); // Iniciar audio si es la primera vez
+            playTapSound();
+            document.getElementById('checkin-modal').classList.remove('hidden');
+        }
+
+        function showFeedback(type) {
+            playTapSound();
+            closeModal('checkin-modal');
+            const feedbackModal = document.getElementById('feedback-modal');
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-title');
+            const text = document.getElementById('feedback-text');
+
+            // Lógica basada en el diseño instruccional (validar y explicar la función adaptativa)
+            if (type === 'ira') {
+                icon.innerHTML = '<i class="fa-solid fa-fire text-red-500"></i>';
+                title.innerText = "¡El Guardián de la Frontera!";
+                text.innerHTML = "Sientes calor y rapidez. Eso significa que <strong>algo te pareció injusto</strong>. ¡Tu Guardián te da energía para poner un límite! No estás solo, es normal sentir esto.";
+                title.className = "text-2xl font-black text-red-600 mb-4";
+            } else if (type === 'tristeza') {
+                icon.innerHTML = '<i class="fa-solid fa-droplet text-blue-500"></i>';
+                title.innerText = "¡El Guardián del Refugio!";
+                text.innerHTML = "Sientes pesadez. Tu cuerpo te está pidiendo <strong>una pausa para sanar</strong> porque algo te dolió. Es de valientes llorar y pedir un abrazo.";
+                title.className = "text-2xl font-black text-blue-600 mb-4";
+            } else if (type === 'miedo') {
+                icon.innerHTML = '<i class="fa-solid fa-bolt text-purple-500"></i>';
+                title.innerText = "¡El Guardián del Escudo!";
+                text.innerHTML = "Estás temblando porque tu cuerpo se prepara para <strong>protegerte de algo nuevo o peligroso</strong>. Dile a tu Guardián que tú estás a salvo ahora.";
+                title.className = "text-2xl font-black text-purple-600 mb-4";
+            } else if (type === 'alegria') {
+                icon.innerHTML = '<i class="fa-solid fa-sun text-yellow-500"></i>';
+                title.innerText = "¡Energía Brillante!";
+                text.innerHTML = "Tu cuerpo está ligero porque estás disfrutando el momento. ¡Esta energía sirve para conectar con otros y crear recuerdos!";
+                title.className = "text-2xl font-black text-yellow-600 mb-4";
+            }
+
+            feedbackModal.classList.remove('hidden');
+            setTimeout(playSuccessSound, 300); // Sonido de descubrimiento
+        }
+
+        // --- Ejercicio de Respiración (Autorregulación) ---
+        let breatheInterval;
+
+        function openBreatheExercise(closeFeedback = false) {
+            if (closeFeedback) closeModal('feedback-modal');
+            document.getElementById('breathe-modal').classList.remove('hidden');
+            
+            const instruction = document.getElementById('breathe-instruction');
+            const circle = document.getElementById('breathe-circle');
+            
+            // Secuencia inicial
+            instruction.innerText = "Inhala profundamente...";
+            circle.style.transform = "scale(1.5)";
+            
+            let isInhaling = true;
+            
+            // Bucle de respiración simple
+            breatheInterval = setInterval(() => {
+                isInhaling = !isInhaling;
+                if (isInhaling) {
+                    instruction.innerText = "Inhala...";
+                    circle.style.transform = "scale(1.5)";
+                } else {
+                    instruction.innerText = "Exhala lento...";
+                    circle.style.transform = "scale(0.5)";
+                }
+            }, 4000); // 4 segundos cada fase
+        }
+
+        function stopBreatheExercise() {
+            clearInterval(breatheInterval);
+            playTapSound();
+            document.getElementById('breathe-modal').classList.add('hidden');
+            
+            // Reiniciar estado
+            const circle = document.getElementById('breathe-circle');
+            circle.style.transform = "scale(0.5)";
+            
+            // Validación al terminar el ejercicio
+            setTimeout(() => {
+                showMessage("¡Excelente trabajo!", "Tu sistema nervioso se ha calmado. Eres un gran Navegante.", "fa-solid fa-leaf text-green-500");
+            }, 400);
+        }
+
+        // --- Simulación de audio interactivo (Paisaje Sonoro Real) ---
+        let isAudioPlaying = false;
+        
+        function playAudioScape() {
+            initAudioEngine();
+            playTapSound();
+            document.getElementById('audio-modal').classList.remove('hidden');
+            
+            // Iniciar océano si no está sonando
+            if (!isAudioPlaying) {
+                toggleAudio(); 
+            }
+        }
+
+        function toggleAudio() {
+            playTapSound();
+            isAudioPlaying = !isAudioPlaying;
+            const icon = document.getElementById('audio-icon');
+            
+            if (isAudioPlaying) {
+                // Iniciar sonido generativo
+                if(oceanSynth.state !== "started") {
+                    oceanSynth.start();
+                    oceanLFO.start();
+                }
+                icon.className = "fa-solid fa-pause text-4xl text-blue-500";
+            } else {
+                // Pausar sonido generativo
+                oceanSynth.stop();
+                oceanLFO.stop();
+                icon.className = "fa-solid fa-play text-4xl text-blue-500 ml-2";
+            }
+        }
+
+        // Pausar océano si cerramos el modal de audio
+        const originalCloseModal = closeModal;
+        closeModal = function(id) {
+            if (id === 'audio-modal' && isAudioPlaying) {
+                toggleAudio(); // Apagar audio al salir
+            }
+            originalCloseModal(id);
+        }
+
+        // --- Lógica de Corpografía ---
+        let activeBodyPartId = null;
+
+        function openCorpography() {
+            playTapSound();
+            document.getElementById('corpography-modal').classList.remove('hidden');
+        }
+
+        function selectBodyPart(partId, partName) {
+            playTapSound();
+            activeBodyPartId = partId;
+            
+            // Resaltar visualmente la parte seleccionada con borde oscuro temporalmente
+            document.querySelectorAll('.body-part').forEach(el => el.classList.remove('stroke-gray-800'));
+            document.getElementById(partId).classList.add('stroke-gray-800');
+
+            // Habilitar el panel derecho
+            const panel = document.getElementById('emotion-selector-panel');
+            panel.classList.remove('opacity-30', 'pointer-events-none');
+            
+            // Actualizar título
+            document.getElementById('selected-part-title').innerHTML = `¿Qué sientes en <strong>${partName}</strong>?`;
+        }
+
+        function assignEmotionToBody(colorKey, emotionName) {
+            if (!activeBodyPartId) return;
+            playTapSound();
+
+            const part = document.getElementById(activeBodyPartId);
+            
+            // Limpiar clases de color previas
+            part.classList.remove('fill-gray-200', 'fill-red-400', 'fill-blue-400', 'fill-purple-400', 'fill-yellow-400');
+            
+            // Asignar nuevo color
+            if (colorKey === 'red') part.classList.add('fill-red-400');
+            else if (colorKey === 'blue') part.classList.add('fill-blue-400');
+            else if (colorKey === 'purple') part.classList.add('fill-purple-400');
+            else if (colorKey === 'yellow') part.classList.add('fill-yellow-400');
+            else part.classList.add('fill-gray-200'); // Reset / Nada
+
+            // Quitar el borde de selección
+            part.classList.remove('stroke-gray-800');
+            
+            // Opcional: Feedback auditivo de éxito pequeño
+            if (colorKey !== 'gray' && uiSynth) {
+                uiSynth.triggerAttackRelease("G5", "8n");
+            }
+
+            // Deseleccionar
+            activeBodyPartId = null;
+            const panel = document.getElementById('emotion-selector-panel');
+            panel.classList.add('opacity-30', 'pointer-events-none');
+            document.getElementById('selected-part-title').innerHTML = `Selecciona otra parte`;
+        }
+    </script>
+</body>
+</html>
