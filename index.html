@@ -81,8 +81,8 @@
             /* Atardeceres recreados en CSS para rellenar los glifos (opción B).
                Cálido (playa): dorado -> naranja -> magenta -> violeta.
                Frío (crepúsculo): azul profundo -> morado -> rosa/coral. */
-            --sunset-warm: linear-gradient(135deg, #ffd27d 0%, #ff9a3c 32%, #ff5e8a 66%, #a04ce0 100%);
-            --sunset-cool: linear-gradient(135deg, #1b2a6b 0%, #3d2a7a 34%, #7b3f9d 66%, #ff6b8a 100%);
+            --sunset-warm: linear-gradient(115deg, #fff06a 0%, #ffc21f 18%, #ff7a1a 38%, #ff2e6b 60%, #d81ec2 80%, #7a24ff 100%);
+            --sunset-cool: linear-gradient(115deg, #0b1e8c 0%, #1f4dff 20%, #6a2bff 42%, #b32dd8 62%, #ff2e8a 82%, #ff8a3c 100%);
         }
 
         /* --- TEMA ÁMBAR (lectura cálida / filtro de luz azul) --- */
@@ -117,8 +117,8 @@
 
             /* El tema ámbar conserva los atardeceres cálidos; el frío se calienta
                un poco para no chocar con las superficies color miel. */
-            --sunset-warm: linear-gradient(135deg, #ffd98f 0%, #ff9a3c 32%, #ff5e8a 66%, #b05ae6 100%);
-            --sunset-cool: linear-gradient(135deg, #3a3f8f 0%, #6b3f9d 34%, #a05ac0 66%, #ff7d95 100%);
+            --sunset-warm: linear-gradient(115deg, #fff06a 0%, #ffc21f 18%, #ff7a1a 38%, #ff2e6b 60%, #d81ec2 80%, #8a30ff 100%);
+            --sunset-cool: linear-gradient(115deg, #2638b0 0%, #3d5dff 20%, #7a3fe0 42%, #c24ad8 62%, #ff4f95 82%, #ff9a4c 100%);
         }
 
         /* --- TEMA OSCURO (baja luz) --- */
@@ -153,8 +153,8 @@
 
             /* En oscuro se elevan los tonos iniciales para que los atardeceres
                sigan brillando sobre superficies muy oscuras. */
-            --sunset-warm: linear-gradient(135deg, #ffde96 0%, #ffab52 32%, #ff6f98 66%, #b86bf0 100%);
-            --sunset-cool: linear-gradient(135deg, #4a5bc0 0%, #7b55c8 34%, #b06ad0 66%, #ff85a0 100%);
+            --sunset-warm: linear-gradient(115deg, #fff386 0%, #ffcc45 18%, #ff8f33 38%, #ff4f80 60%, #e84fd0 80%, #9a5cff 100%);
+            --sunset-cool: linear-gradient(115deg, #3a52e0 0%, #5570ff 20%, #9a5cff 42%, #d568e8 62%, #ff6aa5 82%, #ffab5c 100%);
         }
 
         body {
@@ -356,9 +356,9 @@
            Calmas y lentas: respiración de opacidad/escala, sin movimientos bruscos.
            Cada glifo combina DOS animaciones: su transformación original
            (breathe/drip/sway) + una deriva lenta del degradado de atardecer. */
-        .icon-fire { animation: icon-breathe 4s ease-in-out infinite, sunset-drift 11s ease-in-out infinite; transform-origin: center; }
-        .icon-droplet { animation: icon-drip 4.5s ease-in-out infinite, sunset-drift 13s ease-in-out infinite; transform-origin: center top; }
-        .icon-sun { animation: icon-sway 12s ease-in-out infinite, sunset-drift 10s ease-in-out infinite; transform-origin: center; }
+        .icon-fire { animation: icon-breathe 4s ease-in-out infinite, sunset-drift 3.5s linear infinite; transform-origin: center; }
+        .icon-droplet { animation: icon-drip 4.5s ease-in-out infinite, sunset-drift 4s linear infinite; transform-origin: center top; }
+        .icon-sun { animation: icon-sway 12s ease-in-out infinite, sunset-drift 3s linear infinite; transform-origin: center; }
         @keyframes icon-breathe {
             0%, 100% { transform: scale(1); opacity: 0.95; }
             50% { transform: scale(1.06); opacity: 1; }
@@ -380,30 +380,47 @@
            Si el recorte de texto fallara en un motor antiguo, el tinte del chip
            .emotion-icon sigue comunicando la emoción (degradación elegante). */
         .icon-sunset {
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            color: transparent;
-            background-size: 200% 200%;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            /* El !important garantiza que el relleno transparente gane a cualquier
+               color sólido heredado (utilidades text-* de Tailwind, color de
+               FontAwesome o un style="color:" en línea) para que el degradado se vea. */
+            -webkit-text-fill-color: transparent !important;
+            color: transparent !important;
+            /* Caja de degradado mucho mayor que el glifo: los colores barren de
+               lado a lado de forma claramente visible durante la deriva. */
+            background-size: 350% 350%;
             background-position: 0% 50%;
             background-repeat: no-repeat;
+            /* Resplandor cálido/frío detrás del glifo para que el color sea
+               inconfundible incluso a tamaño pequeño. */
+            filter: drop-shadow(0 0 6px rgba(255, 120, 60, 0.45));
         }
-        .icon-sunset-warm { background-image: var(--sunset-warm); }
-        .icon-sunset-cool { background-image: var(--sunset-cool); }
+        .icon-sunset-warm {
+            background-image: var(--sunset-warm);
+            filter: drop-shadow(0 0 7px rgba(255, 110, 50, 0.55));
+        }
+        .icon-sunset-cool {
+            background-image: var(--sunset-cool);
+            filter: drop-shadow(0 0 7px rgba(120, 90, 255, 0.55));
+        }
         /* El glifo del miedo (fantasma) no tenía transformación: se le da un
            flotar muy leve, dentro del mismo vocabulario calmado, + deriva. */
-        .icon-ghost { animation: icon-float 5s ease-in-out infinite, sunset-drift 12s ease-in-out infinite; transform-origin: center; }
+        .icon-ghost { animation: icon-float 5s ease-in-out infinite, sunset-drift 4s linear infinite; transform-origin: center; }
         @keyframes icon-float {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-2.5px); }
         }
         /* Icono de reproducción del tablero central: solo deriva del atardecer
            (sin transformación, el tablero ya tiene su propio brillo pulsante). */
-        .icon-play-drift { animation: sunset-drift 12s ease-in-out infinite; }
-        /* Deriva suave del degradado: mismo carácter calmado que breathe/sway. */
+        .icon-play-drift { animation: sunset-drift 3.2s linear infinite; }
+        /* Deriva del degradado notoriamente rápida: el atardecer barre de un
+           extremo al otro del glifo en un ciclo continuo de pocos segundos para
+           que el movimiento del color sea inconfundible. */
         @keyframes sunset-drift {
-            0%, 100% { background-position: 0% 50%; }
+            0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         /* Glassmorphism coherente (mejora B): fondo semitransparente + desenfoque
@@ -460,7 +477,7 @@
             width: 3.5rem;   /* 56px */
             height: 3.5rem;
             border-radius: 9999px;
-            font-size: 1.5rem; /* 24px, uniforme para los cuatro glifos */
+            font-size: 2rem; /* 32px: glifos más grandes para que el atardecer se lea claramente */
             line-height: 1;
             flex-shrink: 0;
         }
@@ -632,7 +649,7 @@
             .hill-back, .hill-mid, .hill-front,
             .character,
             .char-eye,
-            .icon-fire, .icon-droplet, .icon-sun, .icon-ghost, .icon-play-drift,
+            .icon-fire, .icon-droplet, .icon-sun, .icon-ghost, .icon-play-drift, .icon-sunset,
             .mission-board,
             .btn-breathe,
             .audio-wave,
@@ -645,6 +662,12 @@
             /* Mantener usable el círculo de respiración sin transición brusca */
             #breathe-circle { transition-duration: 0ms !important; }
             .character:hover { transform: none; }
+            /* Visibilidad ante todo: al congelar la deriva, fijar el degradado en
+               una posición central que muestra una franja rica del atardecer, de
+               modo que el relleno siga siendo claramente colorido aunque no se mueva. */
+            .icon-sunset {
+                background-position: 50% 50% !important;
+            }
         }
 
         /* Ocultar barra de desplazamiento */
@@ -681,7 +704,7 @@
         <header class="w-full flex justify-between items-center p-6 relative z-20 gap-3 flex-wrap">
             <div class="glass flex items-center gap-3 px-4 py-2 rounded-full cursor-pointer" onclick="showInfo()">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-xl shadow-inner" style="background: var(--accent);">
-                    <i class="fa-solid fa-compass"></i>
+                    <i class="fa-solid fa-compass icon-sunset icon-sunset-warm icon-play-drift"></i>
                 </div>
                 <h1 class="text-2xl font-black tracking-tight" style="color: var(--accent);">Ánima</h1>
                 <i class="fa-solid fa-circle-info ml-2" style="color: var(--text-muted);"></i>
@@ -912,7 +935,7 @@
             <!-- Círculo de respiración -->
             <div id="breathe-circle" class="w-48 h-48 bg-purple-500/30 border-4 border-purple-400 rounded-full mx-auto flex items-center justify-center shadow-[0_0_50px_rgba(168,85,247,0.5)] transition-all duration-[4000ms] ease-in-out transform scale-50">
                 <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center">
-                    <i class="fa-solid fa-leaf text-3xl text-purple-500"></i>
+                    <i class="fa-solid fa-leaf text-3xl text-purple-500 icon-sunset icon-sunset-cool icon-play-drift"></i>
                 </div>
             </div>
 
@@ -1291,22 +1314,22 @@
 
             // Lógica basada en el diseño instruccional (validar y explicar la función adaptativa)
             if (type === 'ira') {
-                icon.innerHTML = '<i class="fa-solid fa-fire text-red-500"></i>';
+                icon.innerHTML = '<i class="fa-solid fa-fire text-red-500 icon-fire icon-sunset icon-sunset-warm"></i>';
                 title.innerText = "¡El Guardián de la Frontera!";
                 text.innerHTML = "Sientes calor y rapidez. Eso significa que <strong>algo te pareció injusto</strong>. ¡Tu Guardián te da energía para poner un límite! No estás solo, es normal sentir esto.";
                 title.className = "text-2xl font-black text-red-600 mb-4";
             } else if (type === 'tristeza') {
-                icon.innerHTML = '<i class="fa-solid fa-droplet text-blue-500"></i>';
+                icon.innerHTML = '<i class="fa-solid fa-droplet text-blue-500 icon-droplet icon-sunset icon-sunset-cool"></i>';
                 title.innerText = "¡El Guardián del Refugio!";
                 text.innerHTML = "Sientes pesadez. Tu cuerpo te está pidiendo <strong>una pausa para sanar</strong> porque algo te dolió. Es de valientes llorar y pedir un abrazo.";
                 title.className = "text-2xl font-black text-blue-600 mb-4";
             } else if (type === 'miedo') {
-                icon.innerHTML = '<i class="fa-solid fa-ghost text-purple-500"></i>';
+                icon.innerHTML = '<i class="fa-solid fa-ghost text-purple-500 icon-ghost icon-sunset icon-sunset-cool"></i>';
                 title.innerText = "¡El Guardián del Escudo!";
                 text.innerHTML = "Estás temblando porque tu cuerpo se prepara para <strong>protegerte de algo nuevo o peligroso</strong>. Dile a tu Guardián que tú estás a salvo ahora.";
                 title.className = "text-2xl font-black text-purple-600 mb-4";
             } else if (type === 'alegria') {
-                icon.innerHTML = '<i class="fa-solid fa-sun text-yellow-500"></i>';
+                icon.innerHTML = '<i class="fa-solid fa-sun text-yellow-500 icon-sun icon-sunset icon-sunset-warm"></i>';
                 title.innerText = "¡Energía Brillante!";
                 text.innerHTML = "Tu cuerpo está ligero porque estás disfrutando el momento. ¡Esta energía sirve para conectar con otros y crear recuerdos!";
                 title.className = "text-2xl font-black text-yellow-600 mb-4";
