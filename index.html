@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ánima: El Cuaderno del Navegante</title>
+    <!-- Aplicar el tema guardado antes de pintar para evitar parpadeo (mejora C) -->
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('anima-theme');
+                var valid = ['light', 'amber', 'dark'];
+                document.documentElement.setAttribute('data-theme', valid.indexOf(saved) !== -1 ? saved : 'light');
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
     <!-- Tailwind CSS para el diseño -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome para iconos minimalistas -->
@@ -14,19 +26,195 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     
     <style>
+        /* ==========================================================================
+           SISTEMA DE TEMAS (Claro / Ámbar / Oscuro)
+           Todos los colores de superficie se derivan de variables CSS para que los
+           tres modos compartan una sola estructura. El atributo data-theme en <html>
+           cambia la paleta completa. Los colores semánticos de emoción
+           (rojo/azul/morado/amarillo) NO se tematizan: conservan su significado.
+           ========================================================================== */
+        :root {
+            /* Escala de radios consistente (mejora 6) */
+            --radius-card: 16px;   /* tarjetas */
+            --radius-modal: 24px;  /* modales */
+            --radius-hero: 32px;   /* contenedores grandes / héroe */
+
+            /* Sombras suaves en capas (reemplazan sombras duras de una sola capa) */
+            --shadow-soft: 0 1px 2px rgba(31, 41, 55, 0.04), 0 4px 10px rgba(31, 41, 55, 0.06);
+            --shadow-raised: 0 2px 4px rgba(31, 41, 55, 0.05), 0 12px 28px rgba(31, 41, 55, 0.10);
+
+            /* Transición global de tema */
+            --theme-transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+        }
+
+        /* --- TEMA CLARO (día, por defecto) --- */
+        :root,
+        html[data-theme="light"] {
+            --bg-sky-top: #87CEEB;
+            --bg-sky-bottom: #E0F6FF;
+            --aurora-a: rgba(167, 139, 250, 0.28);  /* blob morado */
+            --aurora-b: rgba(96, 165, 250, 0.22);   /* blob azul */
+            --particle-color: rgba(255, 255, 255, 0.85);
+
+            --hill-back-top: #c3a7ff;   --hill-back-bottom: #a07ee6;
+            --hill-mid-top: #9b6dff;    --hill-mid-bottom: #7b52d6;
+            --hill-front-top: #7b52d6;  --hill-front-bottom: #6a44cc;
+            --cloud-color: #ffffff;     --cloud-opacity: 0.8;
+
+            --glass-bg: rgba(255, 255, 255, 0.72);
+            --glass-border: rgba(255, 255, 255, 0.55);
+            --surface: #ffffff;              /* fondo de modales/tarjetas */
+            --surface-soft: #f8f7ff;         /* superficies secundarias */
+            --text-strong: #1f2937;          /* títulos */
+            --text-body: #4b5563;            /* cuerpo */
+            --text-muted: #6b7280;           /* secundario */
+            --accent: #7c3aed;               /* morado de marca */
+            --accent-soft: #a07ee6;
+            --label-char: #ffffff;           /* nombres de personajes sobre colinas */
+
+            --modal-scrim: rgba(17, 24, 39, 0.45);
+            --breathe-grad-top: #1e1b4b;  --breathe-grad-bottom: #0f172a;
+            --audio-grad-top: #0c4a6e;    --audio-grad-bottom: #082f49;
+            --stories-grad-top: #fff7ed;  --stories-grad-bottom: #fde9c8;
+            --stories-text: #92400e;
+        }
+
+        /* --- TEMA ÁMBAR (lectura cálida / filtro de luz azul) --- */
+        html[data-theme="amber"] {
+            --bg-sky-top: #f6d9a8;
+            --bg-sky-bottom: #f1c88a;
+            --aurora-a: rgba(217, 119, 6, 0.20);
+            --aurora-b: rgba(180, 83, 9, 0.16);
+            --particle-color: rgba(255, 237, 200, 0.9);
+
+            --hill-back-top: #e9b877;   --hill-back-bottom: #d99a55;
+            --hill-mid-top: #d68b4a;    --hill-mid-bottom: #bd6f35;
+            --hill-front-top: #bd6f35;  --hill-front-bottom: #a85a28;
+            --cloud-color: #fff4e0;     --cloud-opacity: 0.7;
+
+            --glass-bg: rgba(255, 243, 224, 0.72);
+            --glass-border: rgba(255, 224, 179, 0.6);
+            --surface: #fdf3e3;
+            --surface-soft: #f7e7cf;
+            --text-strong: #4a2c12;
+            --text-body: #5c3a1c;
+            --text-muted: #7a5531;
+            --accent: #b45309;
+            --accent-soft: #d97706;
+            --label-char: #4a2c12;
+
+            --modal-scrim: rgba(74, 44, 18, 0.5);
+            --breathe-grad-top: #4a2c12;  --breathe-grad-bottom: #2d1a0a;
+            --audio-grad-top: #5c3a1c;    --audio-grad-bottom: #3a2410;
+            --stories-grad-top: #fdf1dd;  --stories-grad-bottom: #f6e0bd;
+            --stories-text: #92400e;
+        }
+
+        /* --- TEMA OSCURO (baja luz) --- */
+        html[data-theme="dark"] {
+            --bg-sky-top: #0f172a;
+            --bg-sky-bottom: #1e1b2e;
+            --aurora-a: rgba(139, 92, 246, 0.22);
+            --aurora-b: rgba(56, 89, 150, 0.20);
+            --particle-color: rgba(203, 213, 225, 0.55);
+
+            --hill-back-top: #4c3f7a;   --hill-back-bottom: #3a2f63;
+            --hill-mid-top: #3a2f63;    --hill-mid-bottom: #2c2550;
+            --hill-front-top: #2c2550;  --hill-front-bottom: #211d3f;
+            --cloud-color: #475569;     --cloud-opacity: 0.35;
+
+            --glass-bg: rgba(30, 27, 46, 0.72);
+            --glass-border: rgba(148, 163, 184, 0.22);
+            --surface: #1e1b2e;
+            --surface-soft: #272338;
+            --text-strong: #f1f5f9;
+            --text-body: #cbd5e1;
+            --text-muted: #94a3b8;
+            --accent: #c4b5fd;
+            --accent-soft: #a78bfa;
+            --label-char: #f1f5f9;
+
+            --modal-scrim: rgba(2, 6, 23, 0.72);
+            --breathe-grad-top: #0b1020;  --breathe-grad-bottom: #05070f;
+            --audio-grad-top: #061a2b;    --audio-grad-bottom: #020a12;
+            --stories-grad-top: #2a2416;  --stories-grad-bottom: #1c1810;
+            --stories-text: #fcd34d;
+        }
+
         body {
             font-family: 'Nunito', sans-serif;
             margin: 0;
             overflow-x: hidden;
-            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%); /* Cielo suave */
-            color: #333;
+            background: linear-gradient(180deg, var(--bg-sky-top) 0%, var(--bg-sky-bottom) 100%); /* Cielo suave, tematizable */
+            color: var(--text-body);
+            transition: var(--theme-transition);
         }
 
-        /* Escala de radios consistente (mejora 6) */
-        :root {
-            --radius-card: 16px;   /* tarjetas */
-            --radius-modal: 24px;  /* modales */
-            --radius-hero: 32px;   /* contenedores grandes / héroe */
+        /* Aurora / neblina atmosférica: dos blobs radiales muy suaves que se
+           desplazan lentamente detrás de las colinas (mejora A). Capa decorativa
+           por debajo de .horizon (z-index 1) y .stage (z-index 10). */
+        .aurora {
+            position: fixed;
+            inset: -20% -10% auto -10%;
+            width: 120%;
+            height: 90vh;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .aurora-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            opacity: 0.9;
+            will-change: transform;
+        }
+        .aurora-blob.blob-a {
+            width: 55vw; height: 55vw;
+            top: -10vh; left: -5vw;
+            background: radial-gradient(circle at 50% 50%, var(--aurora-a), transparent 70%);
+            animation: aurora-drift-a 48s ease-in-out infinite;
+        }
+        .aurora-blob.blob-b {
+            width: 48vw; height: 48vw;
+            top: 5vh; right: -8vw;
+            background: radial-gradient(circle at 50% 50%, var(--aurora-b), transparent 70%);
+            animation: aurora-drift-b 60s ease-in-out infinite;
+        }
+        @keyframes aurora-drift-a {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(6vw, 4vh) scale(1.1); }
+        }
+        @keyframes aurora-drift-b {
+            0%, 100% { transform: translate(0, 0) scale(1.05); }
+            50% { transform: translate(-5vw, 3vh) scale(0.95); }
+        }
+
+        /* Partículas de luz / bokeh: pocos puntos luminosos muy tenues que suben
+           lentamente como luciérnagas. Capa detrás del escenario (mejora A). */
+        .particles {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .particle {
+            position: absolute;
+            bottom: -12px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--particle-color);
+            box-shadow: 0 0 8px 2px var(--particle-color);
+            opacity: 0;
+            animation: particle-rise linear infinite;
+        }
+        @keyframes particle-rise {
+            0% { transform: translateY(0) scale(0.6); opacity: 0; }
+            15% { opacity: 0.7; }
+            85% { opacity: 0.5; }
+            100% { transform: translateY(-96vh) scale(1); opacity: 0; }
         }
 
         /* La "colina" o horizonte curvo con capas para dar profundidad (mejora 2) */
@@ -51,24 +239,27 @@
         /* Colina del fondo (más clara, más lejana) */
         .hill-back {
             top: -4vh;
-            background: linear-gradient(180deg, #c3a7ff 0%, #a07ee6 100%);
+            background: linear-gradient(180deg, var(--hill-back-top) 0%, var(--hill-back-bottom) 100%);
             opacity: 0.9;
             animation: hill-float 16s ease-in-out infinite;
+            transition: var(--theme-transition);
         }
         /* Colina intermedia */
         .hill-mid {
             top: 0;
-            background: linear-gradient(180deg, #9b6dff 0%, #7b52d6 100%);
+            background: linear-gradient(180deg, var(--hill-mid-top) 0%, var(--hill-mid-bottom) 100%);
             animation: hill-float 20s ease-in-out infinite;
             animation-delay: -4s;
+            transition: var(--theme-transition);
         }
         /* Colina frontal (más oscura, más cercana) */
         .hill-front {
             top: 5vh;
-            background: linear-gradient(180deg, #7b52d6 0%, #6a44cc 100%);
+            background: linear-gradient(180deg, var(--hill-front-top) 0%, var(--hill-front-bottom) 100%);
             box-shadow: inset 0px 20px 30px rgba(255,255,255,0.2);
             animation: hill-float 24s ease-in-out infinite;
             animation-delay: -8s;
+            transition: var(--theme-transition);
         }
         @keyframes hill-float {
             0%, 100% { transform: translateY(0); }
@@ -78,17 +269,19 @@
         /* Nubes flotantes minimalistas */
         .cloud {
             position: absolute;
-            background: white;
+            background: var(--cloud-color);
             border-radius: 50px;
-            opacity: 0.8;
+            opacity: var(--cloud-opacity);
             animation: float 20s infinite linear;
             z-index: 0;
+            transition: background-color 0.5s ease, opacity 0.5s ease;
         }
         .cloud::before, .cloud::after {
             content: '';
             position: absolute;
-            background: white;
+            background: var(--cloud-color);
             border-radius: 50%;
+            transition: background-color 0.5s ease;
         }
         
         .cloud-1 { width: 120px; height: 40px; top: 15%; left: -150px; animation-duration: 35s; }
@@ -162,16 +355,28 @@
             50% { transform: rotate(6deg); }
         }
 
+        /* Glassmorphism coherente (mejora B): fondo semitransparente + desenfoque
+           + borde sutil. Se usa en la píldora del encabezado, el panel inferior
+           y las tarjetas de actividad. Deriva del tema activo. */
+        .glass {
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(14px) saturate(120%);
+            backdrop-filter: blur(14px) saturate(120%);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-soft);
+            transition: var(--theme-transition), box-shadow 0.25s ease, transform 0.25s ease;
+        }
+
         /* Globos de diálogo */
         .speech-bubble {
             position: absolute;
-            background: white;
+            background: var(--surface);
             border-radius: 20px;
             padding: 15px 25px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-raised);
             font-size: 1.1rem;
             font-weight: 700;
-            color: #4a5568;
+            color: var(--text-body);
             max-width: 250px;
             text-align: center;
             opacity: 0;
@@ -192,7 +397,7 @@
             margin-left: -10px;
             border-width: 10px 10px 0;
             border-style: solid;
-            border-color: white transparent transparent transparent;
+            border-color: var(--surface) transparent transparent transparent;
         }
 
         /* Sistema de iconos coherente: contenedor circular de tamaño fijo
@@ -209,20 +414,27 @@
             flex-shrink: 0;
         }
 
-        /* UI de actividades (Cartas inferiores) */
+        /* UI de actividades (Cartas inferiores) con vidrio esmerilado (mejora B) */
         .activity-card {
-            background: white;
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(10px) saturate(120%);
+            backdrop-filter: blur(10px) saturate(120%);
             border-radius: var(--radius-card);
             padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            transition: all 0.2s ease;
-            border: 2px solid transparent;
+            box-shadow: var(--shadow-soft);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.5s ease;
+            border: 1px solid var(--glass-border);
         }
+        /* Micro-interacción sutil: elevación + escala leve, sin rebote */
         .activity-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
-            border-color: #9b6dff;
+            transform: translateY(-4px) scale(1.015);
+            box-shadow: var(--shadow-raised);
+            border-color: var(--accent-soft);
         }
+
+        /* Títulos y textos dentro de las tarjetas siguen el tema */
+        .activity-card h5 { color: var(--text-strong); }
+        .activity-card p { color: var(--text-muted); }
 
         /* Pantalla modal para interacciones */
         #interaction-modal {
@@ -252,6 +464,103 @@
             50% { box-shadow: 0 24px 48px -12px rgba(106, 68, 204, 0.46), 0 0 16px rgba(155, 109, 255, 0.28); }
         }
 
+        /* ==========================================================================
+           SUPERFICIES DE MODAL TEMATIZADAS (mejoras A y C)
+           Las clases .themed-surface / .themed-scrim reemplazan los colores planos
+           bg-white/bg-gray-900 por superficies derivadas del tema. Los modales con
+           fondo propio (respiración, audio, historias) usan .themed-breathe/.themed-audio/
+           .themed-stories para sus degradados, que también varían por tema.
+           ========================================================================== */
+        .themed-scrim {
+            background: var(--modal-scrim);
+            transition: background-color 0.5s ease;
+        }
+        .themed-surface {
+            background: var(--surface);
+            color: var(--text-body);
+            transition: var(--theme-transition);
+        }
+        /* Dentro de las superficies tematizadas, encauzar los textos/encabezados
+           que usan utilidades grises de Tailwind hacia las variables de tema. */
+        .themed-surface h2:not([class*="text-"]):not([style*="color"]),
+        .themed-surface h3:not([class*="text-"]):not([style*="color"]),
+        .themed-surface h4:not([class*="text-"]):not([style*="color"]) { color: var(--text-strong); }
+        .themed-surface p:not([class*="text-"]):not([style*="color"]),
+        .themed-surface li:not([class*="text-"]):not([style*="color"]),
+        .themed-surface span:not([class*="text-"]):not([style*="color"]) { color: var(--text-body); }
+
+        /* Respiración: degradado nocturno calmante con estrellas tenues */
+        .themed-breathe {
+            background:
+                radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.7), transparent),
+                radial-gradient(1.5px 1.5px at 70% 20%, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 80% 60%, rgba(255,255,255,0.5), transparent),
+                radial-gradient(1.5px 1.5px at 35% 75%, rgba(255,255,255,0.55), transparent),
+                radial-gradient(2px 2px at 55% 45%, rgba(255,255,255,0.45), transparent),
+                linear-gradient(160deg, var(--breathe-grad-top) 0%, var(--breathe-grad-bottom) 100%);
+            transition: background-color 0.5s ease;
+        }
+        /* Audio: degradado de océano profundo */
+        .themed-audio {
+            background: linear-gradient(160deg, var(--audio-grad-top) 0%, var(--audio-grad-bottom) 100%);
+            transition: background-color 0.5s ease;
+        }
+        /* Historias: degradado cálido tipo atardecer */
+        .themed-stories {
+            background: linear-gradient(160deg, var(--stories-grad-top) 0%, var(--stories-grad-bottom) 100%);
+            transition: background-color 0.5s ease;
+        }
+
+        /* Conmutador de tema en el encabezado (mejora C) */
+        .theme-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 4px;
+            border-radius: 9999px;
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(14px) saturate(120%);
+            backdrop-filter: blur(14px) saturate(120%);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-soft);
+            transition: var(--theme-transition);
+        }
+        .theme-switch__btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 9999px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+        .theme-switch__btn:hover { transform: scale(1.08); color: var(--text-strong); }
+        .theme-switch__btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        /* Botón activo (tema seleccionado) */
+        .theme-switch__btn[aria-pressed="true"] {
+            background: var(--accent);
+            color: #ffffff;
+            box-shadow: var(--shadow-soft);
+        }
+        html[data-theme="dark"] .theme-switch__btn[aria-pressed="true"] { color: #1e1b2e; }
+
+        /* Botones de navegación del encabezado tematizados */
+        .nav-pill {
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(14px) saturate(120%);
+            backdrop-filter: blur(14px) saturate(120%);
+            border: 1px solid var(--glass-border);
+            color: var(--accent);
+            box-shadow: var(--shadow-soft);
+            transition: var(--theme-transition), transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .nav-pill:hover { transform: translateY(-2px); box-shadow: var(--shadow-raised); }
+
         /* Estilos para la Corpografía interactiva */
         .body-part {
             transition: all 0.3s ease;
@@ -275,9 +584,13 @@
             .icon-fire, .icon-droplet, .icon-sun,
             .mission-board,
             .btn-breathe,
-            .audio-wave {
+            .audio-wave,
+            .aurora-blob,
+            .particle {
                 animation: none !important;
             }
+            /* Ocultar partículas por completo cuando se reduce el movimiento */
+            .particles { display: none; }
             /* Mantener usable el círculo de respiración sin transición brusca */
             #breathe-circle { transition-duration: 0ms !important; }
             .character:hover { transform: none; }
@@ -288,6 +601,15 @@
     </style>
 </head>
 <body class="relative">
+
+    <!-- Aurora / neblina atmosférica (capa de fondo, detrás de colinas y nubes) -->
+    <div class="aurora" aria-hidden="true">
+        <div class="aurora-blob blob-a"></div>
+        <div class="aurora-blob blob-b"></div>
+    </div>
+
+    <!-- Partículas de luz / bokeh (luciérnagas tenues subiendo lentamente) -->
+    <div class="particles" id="particles" aria-hidden="true"></div>
 
     <!-- Fondo Atmosférico -->
     <div class="cloud cloud-1"></div>
@@ -305,30 +627,43 @@
     <div class="stage w-full">
         
         <!-- Encabezado y Logo (Estilo minimalista) -->
-        <header class="w-full flex justify-between items-center p-6 relative z-20">
-            <div class="flex items-center gap-3 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm cursor-pointer" onclick="showInfo()">
-                <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white text-xl shadow-inner">
+        <header class="w-full flex justify-between items-center p-6 relative z-20 gap-3 flex-wrap">
+            <div class="glass flex items-center gap-3 px-4 py-2 rounded-full cursor-pointer" onclick="showInfo()">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-xl shadow-inner" style="background: var(--accent);">
                     <i class="fa-solid fa-compass"></i>
                 </div>
-                <h1 class="text-2xl font-black text-purple-700 tracking-tight">Ánima</h1>
-                <i class="fa-solid fa-circle-info text-gray-500 ml-2 hover:text-purple-500"></i>
+                <h1 class="text-2xl font-black tracking-tight" style="color: var(--accent);">Ánima</h1>
+                <i class="fa-solid fa-circle-info ml-2" style="color: var(--text-muted);"></i>
             </div>
             
-            <nav class="flex gap-4">
-                <button class="bg-white/80 hover:bg-white text-purple-700 font-bold py-2 px-6 rounded-full shadow-sm transition-colors" onclick="openProfile()">
+            <nav class="flex items-center gap-3">
+                <!-- Conmutador de tema: Claro / Ámbar / Oscuro (mejora C) -->
+                <div class="theme-switch" role="group" aria-label="Tema de visualización">
+                    <button type="button" id="theme-btn-light" class="theme-switch__btn" onclick="setTheme('light')" aria-pressed="true" aria-label="Tema Claro" title="Claro">
+                        <i class="fa-solid fa-sun" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" id="theme-btn-amber" class="theme-switch__btn" onclick="setTheme('amber')" aria-pressed="false" aria-label="Tema Ámbar" title="Ámbar">
+                        <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" id="theme-btn-dark" class="theme-switch__btn" onclick="setTheme('dark')" aria-pressed="false" aria-label="Tema Oscuro" title="Oscuro">
+                        <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <button class="nav-pill font-bold py-2 px-6 rounded-full" onclick="openProfile()">
                     <i class="fa-solid fa-user-astronaut mr-2"></i> Mi Navegante
                 </button>
             </nav>
         </header>
 
         <!-- Modal de Información del Proyecto -->
-        <div id="info-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-            <div class="bg-white max-w-2xl w-full p-8 shadow-2xl relative" style="border-radius: var(--radius-modal);">
-                <button onclick="hideInfo()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl">
+        <div id="info-modal" class="themed-scrim hidden fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div class="themed-surface max-w-2xl w-full p-8 shadow-2xl relative" style="border-radius: var(--radius-modal);">
+                <button onclick="hideInfo()" class="absolute top-4 right-4 text-2xl" style="color: var(--text-muted);">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
-                <h2 class="text-3xl font-black text-purple-600 mb-4">¿Qué es el Proyecto Ánima?</h2>
-                <div class="text-gray-600 text-lg space-y-4 font-inter leading-relaxed">
+                <h2 class="text-3xl font-black mb-4" style="color: var(--accent);">¿Qué es el Proyecto Ánima?</h2>
+                <div class="text-lg space-y-4 font-inter leading-relaxed" style="color: var(--text-body);">
                     <p><strong>Para los Navegantes (Niños):</strong> Ánima es tu mundo interior. Aquí aprenderemos a escuchar a los "Guardianes" (tus emociones) para volvernos más fuertes y sabios.</p>
                     <p><strong>Para los Guías (Padres/Educadores):</strong> Este es un Hub de Inteligencia Emocional basado en <em>Minimalismo Cognitivo</em>. Sin sobreestimulación visual. Utilizamos interacciones simples y paisajes sonoros para enseñar <strong>Consciencia</strong> y <strong>Autorregulación Emocional</strong>.</p>
                     <ul class="list-disc pl-6 text-gray-500 text-base">
@@ -337,7 +672,7 @@
                         <li>Fomenta el anclaje seguro frente a la ansiedad o frustración.</li>
                     </ul>
                 </div>
-                <button onclick="hideInfo()" class="mt-8 w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition-colors">
+                <button onclick="hideInfo()" class="mt-8 w-full text-white font-bold py-3 rounded-xl transition-transform hover:scale-[1.02]" style="background: var(--accent);">
                     ¡Comenzar la Aventura!
                 </button>
             </div>
@@ -370,16 +705,16 @@
                     <!-- Sonrisa -->
                     <path d="M 62 92 Q 80 112 98 92" fill="none" stroke="#374151" stroke-width="5" stroke-linecap="round"/>
                 </svg>
-                <p class="text-white text-center mt-4 font-bold text-xl drop-shadow-md">Lumi</p>
+                <p class="text-center mt-4 font-bold text-xl drop-shadow-md" style="color: var(--label-char);">Lumi</p>
             </div>
 
             <!-- Centro: Pizarra interactiva / Portal (CTA destacado) -->
-            <div class="mission-board relative z-10 w-80 h-56 bg-white/95 border-4 border-purple-200 flex flex-col items-center justify-center p-6 cursor-pointer transition-transform" onclick="startCheckIn()">
-                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-                    <i class="fa-solid fa-play text-2xl text-purple-500 ml-1"></i>
+            <div class="mission-board themed-surface relative z-10 w-80 h-56 flex flex-col items-center justify-center p-6 cursor-pointer transition-transform" style="border: 4px solid var(--glass-border);" onclick="startCheckIn()">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4" style="background: var(--surface-soft);">
+                    <i class="fa-solid fa-play text-2xl ml-1" style="color: var(--accent);"></i>
                 </div>
-                <h3 class="text-xl font-bold text-gray-800 text-center">Inicia tu<br>Misión de Hoy</h3>
-                <p class="text-sm text-gray-600 mt-2">Haz clic aquí</p>
+                <h3 class="text-xl font-bold text-center" style="color: var(--text-strong);">Inicia tu<br>Misión de Hoy</h3>
+                <p class="text-sm mt-2" style="color: var(--text-muted);">Haz clic aquí</p>
             </div>
 
             <!-- Personaje 2: Nova (El Explorador Práctico) -->
@@ -405,14 +740,14 @@
                     <!-- Boca (recta) -->
                     <rect x="48" y="102" width="32" height="5" rx="2.5" fill="#374151"/>
                 </svg>
-                <p class="text-white text-center mt-4 font-bold text-xl drop-shadow-md">Nova</p>
+                <p class="text-center mt-4 font-bold text-xl drop-shadow-md" style="color: var(--label-char);">Nova</p>
             </div>
         </main>
 
         <!-- Menú Inferior de Actividades (Carrusel) -->
         <footer class="w-full p-6 z-20 pb-10">
-            <div class="max-w-5xl mx-auto bg-white/70 backdrop-blur-md rounded-[32px] shadow-xl p-6">
-                <h4 class="text-purple-800 font-bold mb-4 ml-2">El Archivo del Navegante</h4>
+            <div class="glass max-w-5xl mx-auto rounded-[32px] p-6">
+                <h4 class="font-bold mb-4 ml-2" style="color: var(--text-strong);">El Archivo del Navegante</h4>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     
                     <!-- Tarjeta 1: Audio / Paisaje Sonoro -->
@@ -471,10 +806,10 @@
     <!-- OVERLAYS / MODALES INTERACTIVOS -->
 
     <!-- Modal 1: Check-in Emocional (La interacción principal) -->
-    <div id="checkin-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60" style="backdrop-filter: blur(10px);">
-        <div class="bg-white max-w-md w-full p-8 shadow-2xl text-center" style="border-radius: var(--radius-modal);">
-            <h2 class="text-2xl font-black text-gray-800 mb-2">¡Hola, Navegante!</h2>
-            <p class="text-gray-600 mb-8">¿Cómo se siente tu cuerpo en este momento?</p>
+    <div id="checkin-modal" class="themed-scrim hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="backdrop-filter: blur(10px);">
+        <div class="themed-surface max-w-md w-full p-8 shadow-2xl text-center" style="border-radius: var(--radius-modal);">
+            <h2 class="text-2xl font-black mb-2" style="color: var(--text-strong);">¡Hola, Navegante!</h2>
+            <p class="mb-8" style="color: var(--text-body);">¿Cómo se siente tu cuerpo en este momento?</p>
             
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <!-- Opciones que representan Ecos/Emociones sin decir el nombre directamente -->
@@ -496,30 +831,30 @@
                 </button>
             </div>
             
-            <button onclick="closeModal('checkin-modal')" class="text-gray-500 hover:text-gray-700 font-bold underline">
+            <button onclick="closeModal('checkin-modal')" class="font-bold underline" style="color: var(--text-muted);">
                 Cerrar por ahora
             </button>
         </div>
     </div>
 
     <!-- Modal 2: Mensaje de Validación (Resultado del Check-in) -->
-    <div id="feedback-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60" style="backdrop-filter: blur(10px);">
-        <div class="bg-white max-w-md w-full p-8 shadow-2xl text-center" style="border-radius: var(--radius-modal);">
+    <div id="feedback-modal" class="themed-scrim hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="backdrop-filter: blur(10px);">
+        <div class="themed-surface max-w-md w-full p-8 shadow-2xl text-center" style="border-radius: var(--radius-modal);">
             <div id="feedback-icon" class="text-5xl mb-4"></div>
-            <h2 id="feedback-title" class="text-2xl font-black text-gray-800 mb-4"></h2>
-            <p id="feedback-text" class="text-gray-600 text-lg mb-8"></p>
+            <h2 id="feedback-title" class="text-2xl font-black mb-4" style="color: var(--text-strong);"></h2>
+            <p id="feedback-text" class="text-lg mb-8" style="color: var(--text-body);"></p>
             
-            <button onclick="openBreatheExercise(true)" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 rounded-xl transition-colors mb-3">
+            <button onclick="openBreatheExercise(true)" class="w-full text-white font-bold py-4 rounded-xl transition-transform hover:scale-[1.02] mb-3" style="background: var(--accent);">
                 Hacer ejercicio de anclaje
             </button>
-            <button onclick="closeModal('feedback-modal')" class="text-gray-500 hover:text-gray-700 font-bold underline">
+            <button onclick="closeModal('feedback-modal')" class="font-bold underline" style="color: var(--text-muted);">
                 Volver al menú
             </button>
         </div>
     </div>
 
     <!-- Modal 3: Ejercicio de Respiración (Autorregulación) -->
-    <div id="breathe-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/90">
+    <div id="breathe-modal" class="themed-breathe hidden fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="text-center">
             <h2 id="breathe-instruction" class="text-3xl font-black text-white mb-12">Prepárate...</h2>
             
@@ -537,19 +872,19 @@
     </div>
 
     <!-- Modal 4: Mensaje Genérico -->
-    <div id="message-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60" style="backdrop-filter: blur(10px);">
-        <div class="bg-white max-w-sm w-full p-8 shadow-2xl text-center border-b-4 border-purple-500" style="border-radius: var(--radius-modal);">
-            <div id="message-icon" class="text-5xl mb-4 text-purple-500"><i class="fa-solid fa-star"></i></div>
-            <h2 id="message-title" class="text-2xl font-black text-gray-800 mb-4"></h2>
-            <p id="message-text" class="text-gray-600 text-lg mb-8 font-medium"></p>
-            <button onclick="closeModal('message-modal')" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition-colors">
+    <div id="message-modal" class="themed-scrim hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="backdrop-filter: blur(10px);">
+        <div class="themed-surface max-w-sm w-full p-8 shadow-2xl text-center" style="border-radius: var(--radius-modal); border-bottom: 4px solid var(--accent);">
+            <div id="message-icon" class="text-5xl mb-4" style="color: var(--accent);"><i class="fa-solid fa-star"></i></div>
+            <h2 id="message-title" class="text-2xl font-black mb-4" style="color: var(--text-strong);"></h2>
+            <p id="message-text" class="text-lg mb-8 font-medium" style="color: var(--text-body);"></p>
+            <button onclick="closeModal('message-modal')" class="w-full text-white font-bold py-3 rounded-xl transition-transform hover:scale-[1.02]" style="background: var(--accent);">
                 Entendido
             </button>
         </div>
     </div>
 
     <!-- Modal 5: Viaje Sonoro (Paisaje Acústico) -->
-    <div id="audio-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/95 backdrop-blur-md">
+    <div id="audio-modal" class="themed-audio hidden fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
         <div class="text-center w-full max-w-md">
             <h2 class="text-3xl font-black text-white mb-2">Refugio del Mar</h2>
             <p class="text-blue-200 mb-16 font-medium text-lg">Cierra los ojos. Imagina que las olas se llevan el peso...</p>
@@ -572,13 +907,13 @@
     </div>
 
     <!-- Modal 6: Historias / Comunidad (Validación por pares) -->
-    <div id="stories-modal" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-yellow-50/95 backdrop-blur-sm">
+    <div id="stories-modal" class="themed-stories hidden fixed inset-0 z-50 flex flex-col items-center justify-center p-4 backdrop-blur-sm">
         <div class="max-w-4xl w-full">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-3xl md:text-4xl font-black text-yellow-600"><i class="fa-solid fa-tree mr-2"></i> El Árbol de las Historias</h2>
-                <button onclick="closeModal('stories-modal')" class="text-gray-500 hover:text-gray-800 text-3xl"><i class="fa-solid fa-xmark"></i></button>
+                <h2 class="text-3xl md:text-4xl font-black" style="color: var(--stories-text);"><i class="fa-solid fa-tree mr-2"></i> El Árbol de las Historias</h2>
+                <button onclick="closeModal('stories-modal')" class="text-3xl" style="color: var(--stories-text);"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-gray-600 mb-8 text-lg font-medium">Descubre cómo otros Navegantes ayudan a sus Guardianes. ¡No estás solo!</p>
+            <p class="mb-8 text-lg font-medium" style="color: var(--stories-text);">Descubre cómo otros Navegantes ayudan a sus Guardianes. ¡No estás solo!</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Historia 1 -->
@@ -619,8 +954,8 @@
     </div>
 
     <!-- Modal 7: Cartografía Emocional -->
-    <div id="map-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/70 backdrop-blur-sm">
-        <div class="bg-white max-w-2xl w-full p-8 shadow-2xl relative overflow-hidden" style="border-radius: var(--radius-hero);">
+    <div id="map-modal" class="themed-scrim hidden fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="themed-surface max-w-2xl w-full p-8 shadow-2xl relative overflow-hidden" style="border-radius: var(--radius-hero);">
             <!-- Decoración de fondo -->
             <div class="absolute -right-16 -top-16 w-48 h-48 bg-purple-100 rounded-full opacity-50"></div>
             <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-blue-50 rounded-full opacity-50"></div>
@@ -629,8 +964,8 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
             
-            <h2 class="text-3xl font-black text-purple-700 mb-1 relative z-10">Mi Cartografía</h2>
-            <p class="text-gray-500 mb-8 relative z-10 font-medium">El mapa de tus emociones descubiertas esta semana.</p>
+            <h2 class="text-3xl font-black mb-1 relative z-10" style="color: var(--accent);">Mi Cartografía</h2>
+            <p class="mb-8 relative z-10 font-medium" style="color: var(--text-muted);">El mapa de tus emociones descubiertas esta semana.</p>
             
             <div class="flex flex-col md:flex-row gap-6 relative z-10">
                 <!-- Insignia Principal (Logro positivo) -->
@@ -664,16 +999,16 @@
     </div>
 
     <!-- Modal 8: Corpografía (Mapeo Corporal) -->
-    <div id="corpography-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-orange-50/95 backdrop-blur-md">
-        <div class="max-w-3xl w-full bg-white p-8 shadow-2xl relative overflow-hidden flex flex-col md:flex-row gap-8" style="border-radius: var(--radius-hero);">
-            <button onclick="closeModal('corpography-modal')" class="absolute top-6 right-6 text-gray-500 hover:text-gray-700 text-2xl z-20 bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center shadow-sm">
+    <div id="corpography-modal" class="themed-scrim hidden fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="themed-surface max-w-3xl w-full p-8 shadow-2xl relative overflow-hidden flex flex-col md:flex-row gap-8" style="border-radius: var(--radius-hero);">
+            <button onclick="closeModal('corpography-modal')" class="absolute top-6 right-6 text-2xl z-20 rounded-full w-10 h-10 flex items-center justify-center shadow-sm" style="color: var(--text-muted); background: var(--surface-soft);">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             
             <!-- Silueta Interactiva -->
             <div class="flex-1 flex flex-col items-center justify-center relative z-10">
                 <h2 class="text-2xl font-black text-orange-600 mb-2">Tu Corpografía</h2>
-                <p class="text-gray-500 text-sm mb-6 text-center">Toca una parte de tu cuerpo y cuéntanos qué Guardián vive ahí hoy.</p>
+                <p class="text-sm mb-6 text-center" style="color: var(--text-muted);">Toca una parte de tu cuerpo y cuéntanos qué Guardián vive ahí hoy.</p>
                 
                 <svg viewBox="0 0 100 220" class="w-56 h-auto drop-shadow-xl overflow-visible">
                     <!-- Cabeza -->
@@ -694,8 +1029,8 @@
             </div>
 
             <!-- Panel de Selección de Emoción (Se muestra al hacer clic en una parte) -->
-            <div id="emotion-selector-panel" class="flex-1 flex flex-col justify-center opacity-30 pointer-events-none transition-opacity duration-300 relative z-10 bg-gray-50 p-6 rounded-3xl border-2 border-gray-100">
-                <h3 id="selected-part-title" class="text-xl font-bold text-gray-700 mb-4 text-center">Selecciona una parte primero</h3>
+            <div id="emotion-selector-panel" class="flex-1 flex flex-col justify-center opacity-30 pointer-events-none transition-opacity duration-300 relative z-10 p-6 rounded-3xl border-2" style="background: var(--surface-soft); border-color: var(--glass-border);">
+                <h3 id="selected-part-title" class="text-xl font-bold mb-4 text-center" style="color: var(--text-strong);">Selecciona una parte primero</h3>
                 
                 <div class="grid grid-cols-2 gap-3 mb-4">
                     <button class="bg-red-50 hover:bg-red-100 border-2 border-red-200 p-3 rounded-xl flex items-center gap-2 transition-transform hover:scale-105" onclick="assignEmotionToBody('red', 'Ira')">
@@ -765,6 +1100,51 @@
             if (!audioInitialized) initAudioEngine();
             if (uiSynth) uiSynth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "4n");
         }
+
+        // --- Conmutador de Tema (Claro / Ámbar / Oscuro) ---
+        const THEME_KEY = 'anima-theme';
+        const VALID_THEMES = ['light', 'amber', 'dark'];
+
+        function applyThemeButtons(theme) {
+            VALID_THEMES.forEach(function (t) {
+                const btn = document.getElementById('theme-btn-' + t);
+                if (btn) btn.setAttribute('aria-pressed', String(t === theme));
+            });
+        }
+
+        function setTheme(theme) {
+            if (VALID_THEMES.indexOf(theme) === -1) theme = 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            try { localStorage.setItem(THEME_KEY, theme); } catch (e) { /* almacenamiento no disponible */ }
+            applyThemeButtons(theme);
+            // Sonido suave de confirmación si el motor de audio ya está activo
+            if (typeof playTapSound === 'function' && audioInitialized) playTapSound();
+        }
+
+        // Sincronizar los botones con el tema ya aplicado (antes de pintar) al cargar
+        (function () {
+            const current = document.documentElement.getAttribute('data-theme') || 'light';
+            applyThemeButtons(current);
+        })();
+
+        // --- Partículas de luz / bokeh (pocas y tenues, como luciérnagas) ---
+        (function generateParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            const COUNT = 14; // pocas, para no saturar (minimalismo cognitivo)
+            for (let i = 0; i < COUNT; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = 3 + Math.random() * 5;        // 3-8px
+                const duration = 18 + Math.random() * 20;   // 18-38s, lento
+                p.style.left = (Math.random() * 100) + 'vw';
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.animationDuration = duration + 's';
+                p.style.animationDelay = (-Math.random() * duration) + 's';
+                container.appendChild(p);
+            }
+        })();
 
         // --- Gestión de Información ---
         function showInfo() {
