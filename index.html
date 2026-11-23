@@ -143,22 +143,23 @@
             95% { transform: scaleY(0.1); }
         }
 
-        /* Animaciones sutiles para iconos de emociones en el check-in (mejora 1) */
-        .icon-fire { animation: icon-flicker 2.2s ease-in-out infinite; transform-origin: center bottom; }
-        .icon-droplet { animation: icon-drip 3s ease-in-out infinite; transform-origin: center top; }
-        .icon-sun { animation: icon-rotate 14s linear infinite; }
-        @keyframes icon-flicker {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            40% { transform: scale(1.08) skewX(-3deg); opacity: 0.92; }
-            70% { transform: scale(0.97) skewX(2deg); opacity: 1; }
+        /* Animaciones sutiles para iconos de emociones en el check-in (mejora 1)
+           Calmas y lentas: respiración de opacidad/escala, sin movimientos bruscos. */
+        .icon-fire { animation: icon-breathe 4s ease-in-out infinite; transform-origin: center; }
+        .icon-droplet { animation: icon-drip 4.5s ease-in-out infinite; transform-origin: center top; }
+        .icon-sun { animation: icon-sway 12s ease-in-out infinite; transform-origin: center; }
+        @keyframes icon-breathe {
+            0%, 100% { transform: scale(1); opacity: 0.95; }
+            50% { transform: scale(1.06); opacity: 1; }
         }
         @keyframes icon-drip {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(5px); }
+            50% { transform: translateY(3px); }
         }
-        @keyframes icon-rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        /* Oscilación muy lenta y de baja amplitud en lugar de giro continuo */
+        @keyframes icon-sway {
+            0%, 100% { transform: rotate(-6deg); }
+            50% { transform: rotate(6deg); }
         }
 
         /* Globos de diálogo */
@@ -192,6 +193,20 @@
             border-width: 10px 10px 0;
             border-style: solid;
             border-color: white transparent transparent transparent;
+        }
+
+        /* Sistema de iconos coherente: contenedor circular de tamaño fijo
+           para que glifos de distinta altura compartan la misma base óptica (mejoras 1-3). */
+        .emotion-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3.5rem;   /* 56px */
+            height: 3.5rem;
+            border-radius: 9999px;
+            font-size: 1.5rem; /* 24px, uniforme para los cuatro glifos */
+            line-height: 1;
+            flex-shrink: 0;
         }
 
         /* UI de actividades (Cartas inferiores) */
@@ -233,8 +248,8 @@
         }
         .mission-board:hover { transform: scale(1.05); }
         @keyframes mission-glow {
-            0%, 100% { box-shadow: 0 25px 50px -12px rgba(106, 68, 204, 0.45), 0 0 0px rgba(155, 109, 255, 0.0); }
-            50% { box-shadow: 0 25px 55px -10px rgba(106, 68, 204, 0.55), 0 0 35px rgba(155, 109, 255, 0.55); }
+            0%, 100% { box-shadow: 0 22px 44px -14px rgba(106, 68, 204, 0.40), 0 0 0px rgba(155, 109, 255, 0.0); }
+            50% { box-shadow: 0 24px 48px -12px rgba(106, 68, 204, 0.46), 0 0 16px rgba(155, 109, 255, 0.28); }
         }
 
         /* Estilos para la Corpografía interactiva */
@@ -248,6 +263,24 @@
             filter: drop-shadow(0 0 8px rgba(155, 109, 255, 0.5));
             transform: scale(1.02);
             transform-origin: center;
+        }
+
+        /* Accesibilidad: respetar la preferencia de movimiento reducido (mejora 7).
+           Desactiva o reduce al mínimo las animaciones decorativas. */
+        @media (prefers-reduced-motion: reduce) {
+            .cloud,
+            .hill-back, .hill-mid, .hill-front,
+            .character,
+            .char-eye,
+            .icon-fire, .icon-droplet, .icon-sun,
+            .mission-board,
+            .btn-breathe,
+            .audio-wave {
+                animation: none !important;
+            }
+            /* Mantener usable el círculo de respiración sin transición brusca */
+            #breathe-circle { transition-duration: 0ms !important; }
+            .character:hover { transform: none; }
         }
 
         /* Ocultar barra de desplazamiento */
@@ -384,9 +417,11 @@
                     
                     <!-- Tarjeta 1: Audio / Paisaje Sonoro -->
                     <div class="activity-card flex flex-col items-center justify-center cursor-pointer" onclick="playAudioScape()">
-                        <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center text-xl mb-2 relative">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center text-xl mb-2 relative ring-1 ring-blue-200">
                             <i class="fa-solid fa-headphones-simple"></i>
-                            <i class="fa-solid fa-water text-sm text-blue-400 absolute -bottom-1 -right-1 bg-blue-50 rounded-full p-1"></i>
+                            <span class="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-white ring-2 ring-blue-100 flex items-center justify-center shadow-sm">
+                                <i class="fa-solid fa-water text-[0.65rem] text-blue-400"></i>
+                            </span>
                         </div>
                         <h5 class="font-bold text-gray-700 text-sm">Viaje Sonoro</h5>
                         <p class="text-xs text-gray-500 text-center">Refugio del Mar</p>
@@ -416,7 +451,7 @@
                             <i class="fa-solid fa-medal"></i>
                         </div>
                         <h5 class="font-bold text-gray-700 text-sm">Mi Cartografía</h5>
-                        <p class="text-xs text-purple-400 text-center">¡Nuevo Logro!</p>
+                        <p class="text-xs font-semibold text-purple-600 text-center">¡Nuevo Logro!</p>
                     </div>
 
                     <!-- Tarjeta 5: Corpografía (NUEVA) -->
@@ -444,19 +479,19 @@
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <!-- Opciones que representan Ecos/Emociones sin decir el nombre directamente -->
                 <button class="bg-red-50 hover:bg-red-100 border-2 border-red-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('ira')">
-                    <i class="fa-solid fa-fire icon-fire text-3xl text-red-500 mb-2"></i>
+                    <span class="emotion-icon bg-red-100 text-red-500 mb-2"><i class="fa-solid fa-fire fa-fw icon-fire"></i></span>
                     <span class="font-bold text-red-700">Caliente y rápido</span>
                 </button>
                 <button class="bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('tristeza')">
-                    <i class="fa-solid fa-droplet icon-droplet text-3xl text-blue-500 mb-2"></i>
+                    <span class="emotion-icon bg-blue-100 text-blue-500 mb-2"><i class="fa-solid fa-droplet fa-fw icon-droplet"></i></span>
                     <span class="font-bold text-blue-700">Pesado y lento</span>
                 </button>
                 <button class="bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('miedo')">
-                    <i class="fa-solid fa-ghost text-3xl text-purple-500 mb-2"></i>
+                    <span class="emotion-icon bg-purple-100 text-purple-500 mb-2"><i class="fa-solid fa-ghost fa-fw"></i></span>
                     <span class="font-bold text-purple-700">Temblando</span>
                 </button>
                 <button class="bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('alegria')">
-                    <i class="fa-solid fa-sun icon-sun text-3xl text-yellow-500 mb-2"></i>
+                    <span class="emotion-icon bg-yellow-100 text-yellow-600 mb-2"><i class="fa-solid fa-sun fa-fw icon-sun"></i></span>
                     <span class="font-bold text-yellow-700">Ligero y brillante</span>
                 </button>
             </div>
@@ -521,9 +556,9 @@
             
             <div class="relative w-56 h-56 mx-auto flex items-center justify-center mb-16">
                 <!-- Ondas de sonido animadas simulando respiración oceánica -->
-                <div class="absolute inset-0 bg-blue-500/20 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
-                <div class="absolute inset-6 bg-blue-400/30 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]" style="animation-delay: 0.8s;"></div>
-                <div class="absolute inset-12 bg-blue-300/40 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]" style="animation-delay: 1.6s;"></div>
+                <div class="audio-wave absolute inset-0 bg-blue-500/20 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+                <div class="audio-wave absolute inset-6 bg-blue-400/30 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]" style="animation-delay: 0.8s;"></div>
+                <div class="audio-wave absolute inset-12 bg-blue-300/40 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]" style="animation-delay: 1.6s;"></div>
                 
                 <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center z-10 shadow-[0_0_30px_rgba(59,130,246,0.5)] cursor-pointer hover:scale-105 transition-transform" onclick="toggleAudio()">
                     <i id="audio-icon" class="fa-solid fa-pause text-4xl text-blue-500"></i>
