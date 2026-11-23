@@ -22,17 +22,57 @@
             color: #333;
         }
 
-        /* La "colina" o horizonte curvo basado en la imagen de referencia */
+        /* Escala de radios consistente (mejora 6) */
+        :root {
+            --radius-card: 16px;   /* tarjetas */
+            --radius-modal: 24px;  /* modales */
+            --radius-hero: 32px;   /* contenedores grandes / héroe */
+        }
+
+        /* La "colina" o horizonte curvo con capas para dar profundidad (mejora 2) */
+        .horizon {
+            position: absolute;
+            top: 42vh;
+            left: 0;
+            width: 100%;
+            height: 60vh;
+            min-height: 700px;
+            z-index: 1;
+            pointer-events: none;
+        }
         .horizon-curve {
             position: absolute;
-            top: 45vh; /* Ajuste para la altura del horizonte */
             left: -10%;
             width: 120%;
             height: 1000px;
-            background: linear-gradient(180deg, #9b6dff 0%, #6a44cc 100%); /* Color violeta suave */
             border-radius: 50% 50% 0 0;
-            z-index: 1;
+            box-shadow: inset 0px 20px 30px rgba(255,255,255,0.15);
+        }
+        /* Colina del fondo (más clara, más lejana) */
+        .hill-back {
+            top: -4vh;
+            background: linear-gradient(180deg, #c3a7ff 0%, #a07ee6 100%);
+            opacity: 0.9;
+            animation: hill-float 16s ease-in-out infinite;
+        }
+        /* Colina intermedia */
+        .hill-mid {
+            top: 0;
+            background: linear-gradient(180deg, #9b6dff 0%, #7b52d6 100%);
+            animation: hill-float 20s ease-in-out infinite;
+            animation-delay: -4s;
+        }
+        /* Colina frontal (más oscura, más cercana) */
+        .hill-front {
+            top: 5vh;
+            background: linear-gradient(180deg, #7b52d6 0%, #6a44cc 100%);
             box-shadow: inset 0px 20px 30px rgba(255,255,255,0.2);
+            animation: hill-float 24s ease-in-out infinite;
+            animation-delay: -8s;
+        }
+        @keyframes hill-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
         /* Nubes flotantes minimalistas */
@@ -74,14 +114,51 @@
             justify-content: space-between;
         }
 
-        /* Personajes (Minimalistas, hechos con CSS/SVG) */
+        /* Personajes (SVG con animaciones de reposo - mejora 3) */
         .character {
             transition: transform 0.3s ease, filter 0.3s ease;
             cursor: pointer;
+            animation: char-bob 4s ease-in-out infinite;
         }
         .character:hover {
             transform: scale(1.05) translateY(-10px);
             filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+        }
+        /* Suave flotar/respirar de los personajes */
+        @keyframes char-bob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        #char-nova .character { animation-delay: -2s; }
+
+        /* Parpadeo de ojos cada pocos segundos */
+        .char-eye {
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: blink 5s infinite;
+        }
+        #char-nova .char-eye { animation-delay: 1.5s; }
+        @keyframes blink {
+            0%, 92%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+
+        /* Animaciones sutiles para iconos de emociones en el check-in (mejora 1) */
+        .icon-fire { animation: icon-flicker 2.2s ease-in-out infinite; transform-origin: center bottom; }
+        .icon-droplet { animation: icon-drip 3s ease-in-out infinite; transform-origin: center top; }
+        .icon-sun { animation: icon-rotate 14s linear infinite; }
+        @keyframes icon-flicker {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            40% { transform: scale(1.08) skewX(-3deg); opacity: 0.92; }
+            70% { transform: scale(0.97) skewX(2deg); opacity: 1; }
+        }
+        @keyframes icon-drip {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(5px); }
+        }
+        @keyframes icon-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         /* Globos de diálogo */
@@ -120,7 +197,7 @@
         /* UI de actividades (Cartas inferiores) */
         .activity-card {
             background: white;
-            border-radius: 15px;
+            border-radius: var(--radius-card);
             padding: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             transition: all 0.2s ease;
@@ -148,6 +225,18 @@
             100% { transform: scale(1); }
         }
 
+        /* Tablero central destacado con brillo pulsante (mejora 4) */
+        .mission-board {
+            border-radius: var(--radius-hero);
+            box-shadow: 0 25px 50px -12px rgba(106, 68, 204, 0.45);
+            animation: mission-glow 3.5s ease-in-out infinite;
+        }
+        .mission-board:hover { transform: scale(1.05); }
+        @keyframes mission-glow {
+            0%, 100% { box-shadow: 0 25px 50px -12px rgba(106, 68, 204, 0.45), 0 0 0px rgba(155, 109, 255, 0.0); }
+            50% { box-shadow: 0 25px 55px -10px rgba(106, 68, 204, 0.55), 0 0 35px rgba(155, 109, 255, 0.55); }
+        }
+
         /* Estilos para la Corpografía interactiva */
         .body-part {
             transition: all 0.3s ease;
@@ -172,8 +261,12 @@
     <div class="cloud cloud-2"></div>
     <div class="cloud cloud-1" style="top: 30%; left: -300px; animation-duration: 40s;"></div>
 
-    <!-- Horizonte Curvo (La colina violeta de la referencia) -->
-    <div class="horizon-curve"></div>
+    <!-- Horizonte Curvo con capas de colinas para dar profundidad -->
+    <div class="horizon">
+        <div class="horizon-curve hill-back"></div>
+        <div class="horizon-curve hill-mid"></div>
+        <div class="horizon-curve hill-front"></div>
+    </div>
 
     <!-- Contenedor Principal (Escenario) -->
     <div class="stage w-full">
@@ -185,7 +278,7 @@
                     <i class="fa-solid fa-compass"></i>
                 </div>
                 <h1 class="text-2xl font-black text-purple-700 tracking-tight">Ánima</h1>
-                <i class="fa-solid fa-circle-info text-gray-400 ml-2 hover:text-purple-500"></i>
+                <i class="fa-solid fa-circle-info text-gray-500 ml-2 hover:text-purple-500"></i>
             </div>
             
             <nav class="flex gap-4">
@@ -197,8 +290,8 @@
 
         <!-- Modal de Información del Proyecto -->
         <div id="info-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-            <div class="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl relative">
-                <button onclick="hideInfo()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">
+            <div class="bg-white max-w-2xl w-full p-8 shadow-2xl relative" style="border-radius: var(--radius-modal);">
+                <button onclick="hideInfo()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
                 <h2 class="text-3xl font-black text-purple-600 mb-4">¿Qué es el Proyecto Ánima?</h2>
@@ -218,71 +311,85 @@
         </div>
 
         <!-- Área Central Interactiva (Encima de la colina) -->
-        <main class="flex-grow flex items-center justify-center relative -mt-20">
+        <main class="flex-grow flex flex-col md:flex-row items-center justify-center relative md:-mt-20 gap-8 md:gap-0 py-10 md:py-0">
             
             <!-- Personaje 1: Lumi (La Guía Emocional) -->
-            <div class="relative mx-8 mt-20" id="char-lumi">
+            <div class="relative mx-8 md:mt-20" id="char-lumi">
                 <!-- Globo de Diálogo de Lumi -->
                 <div id="bubble-lumi" class="speech-bubble -top-24 left-1/2 -translate-x-1/2 w-48">
                     ¿Cómo te sientes hoy, Navegante?
                 </div>
-                <!-- Gráfico de Lumi (Círculo brillante con cara) -->
-                <div class="character w-40 h-40 bg-gradient-to-tr from-yellow-300 to-orange-200 rounded-full flex flex-col items-center justify-center shadow-[0_0_40px_rgba(253,224,71,0.5)] border-4 border-white" onclick="interactLumi()">
+                <!-- Gráfico de Lumi en SVG (Círculo cálido brillante con cara) -->
+                <svg class="character w-40 h-40" viewBox="0 0 160 160" onclick="interactLumi()" role="img" aria-label="Lumi">
+                    <defs>
+                        <radialGradient id="lumi-grad" cx="50%" cy="40%" r="60%">
+                            <stop offset="0%" stop-color="#fde047"/>
+                            <stop offset="100%" stop-color="#fdba74"/>
+                        </radialGradient>
+                        <filter id="lumi-glow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#fde047" flood-opacity="0.6"/>
+                        </filter>
+                    </defs>
+                    <circle cx="80" cy="80" r="66" fill="url(#lumi-grad)" stroke="#ffffff" stroke-width="6" filter="url(#lumi-glow)"/>
                     <!-- Ojos -->
-                    <div class="flex gap-4 mb-2">
-                        <div class="w-3 h-5 bg-gray-700 rounded-full"></div>
-                        <div class="w-3 h-5 bg-gray-700 rounded-full"></div>
-                    </div>
+                    <rect class="char-eye" x="63" y="62" width="7" height="16" rx="3.5" fill="#374151"/>
+                    <rect class="char-eye" x="90" y="62" width="7" height="16" rx="3.5" fill="#374151"/>
                     <!-- Sonrisa -->
-                    <svg width="40" height="20" viewBox="0 0 40 20">
-                        <path d="M 5 5 Q 20 20 35 5" fill="none" stroke="#374151" stroke-width="3" stroke-linecap="round"/>
-                    </svg>
-                </div>
+                    <path d="M 62 92 Q 80 112 98 92" fill="none" stroke="#374151" stroke-width="5" stroke-linecap="round"/>
+                </svg>
                 <p class="text-white text-center mt-4 font-bold text-xl drop-shadow-md">Lumi</p>
             </div>
 
-            <!-- Centro: Pizarra interactiva / Portal -->
-            <div class="relative z-10 w-80 h-56 bg-white/95 rounded-2xl shadow-2xl border-4 border-purple-200 flex flex-col items-center justify-center p-6 cursor-pointer hover:scale-105 transition-transform" onclick="startCheckIn()">
+            <!-- Centro: Pizarra interactiva / Portal (CTA destacado) -->
+            <div class="mission-board relative z-10 w-80 h-56 bg-white/95 border-4 border-purple-200 flex flex-col items-center justify-center p-6 cursor-pointer transition-transform" onclick="startCheckIn()">
                 <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
                     <i class="fa-solid fa-play text-2xl text-purple-500 ml-1"></i>
                 </div>
                 <h3 class="text-xl font-bold text-gray-800 text-center">Inicia tu<br>Misión de Hoy</h3>
-                <p class="text-sm text-gray-500 mt-2">Haz clic aquí</p>
+                <p class="text-sm text-gray-600 mt-2">Haz clic aquí</p>
             </div>
 
             <!-- Personaje 2: Nova (El Explorador Práctico) -->
-            <div class="relative mx-8 mt-20" id="char-nova">
+            <div class="relative mx-8 md:mt-20" id="char-nova">
                 <!-- Globo de Diálogo de Nova -->
                 <div id="bubble-nova" class="speech-bubble -top-24 left-1/2 -translate-x-1/2 w-56">
                     ¡Tengo herramientas si necesitas calmarte!
                 </div>
-                <!-- Gráfico de Nova (Cuadrado redondeado azul) -->
-                <div class="character w-32 h-36 bg-gradient-to-tr from-cyan-400 to-blue-300 rounded-3xl flex flex-col items-center justify-center shadow-lg border-4 border-white" onclick="interactNova()">
-                    <!-- Gafas/Ojos -->
-                    <div class="flex gap-1 mb-2 bg-gray-700 p-1 rounded-lg">
-                        <div class="w-6 h-6 bg-white rounded-full"></div>
-                        <div class="w-6 h-6 bg-white rounded-full"></div>
-                    </div>
+                <!-- Gráfico de Nova en SVG (Cuadrado redondeado azul con gafas) -->
+                <svg class="character w-32 h-36" viewBox="0 0 128 144" onclick="interactNova()" role="img" aria-label="Nova">
+                    <defs>
+                        <linearGradient id="nova-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#22d3ee"/>
+                            <stop offset="100%" stop-color="#93c5fd"/>
+                        </linearGradient>
+                    </defs>
+                    <rect x="12" y="16" width="104" height="112" rx="28" fill="url(#nova-grad)" stroke="#ffffff" stroke-width="6"/>
+                    <!-- Puente de las gafas -->
+                    <rect x="28" y="60" width="72" height="30" rx="8" fill="#374151"/>
+                    <!-- Lentes/Ojos -->
+                    <circle class="char-eye" cx="46" cy="75" r="11" fill="#ffffff"/>
+                    <circle class="char-eye" cx="82" cy="75" r="11" fill="#ffffff"/>
                     <!-- Boca (recta) -->
-                    <div class="w-8 h-1 bg-gray-700 rounded-full mt-1"></div>
-                </div>
+                    <rect x="48" y="102" width="32" height="5" rx="2.5" fill="#374151"/>
+                </svg>
                 <p class="text-white text-center mt-4 font-bold text-xl drop-shadow-md">Nova</p>
             </div>
         </main>
 
         <!-- Menú Inferior de Actividades (Carrusel) -->
-        <footer class="w-full bg-white/10 p-6 z-20 pb-10">
-            <div class="max-w-5xl mx-auto">
-                <h4 class="text-white font-bold mb-4 ml-2 drop-shadow-md">El Archivo del Navegante</h4>
+        <footer class="w-full p-6 z-20 pb-10">
+            <div class="max-w-5xl mx-auto bg-white/70 backdrop-blur-md rounded-[32px] shadow-xl p-6">
+                <h4 class="text-purple-800 font-bold mb-4 ml-2">El Archivo del Navegante</h4>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     
                     <!-- Tarjeta 1: Audio / Paisaje Sonoro -->
                     <div class="activity-card flex flex-col items-center justify-center cursor-pointer" onclick="playAudioScape()">
-                        <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center text-xl mb-2">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center text-xl mb-2 relative">
                             <i class="fa-solid fa-headphones-simple"></i>
+                            <i class="fa-solid fa-water text-sm text-blue-400 absolute -bottom-1 -right-1 bg-blue-50 rounded-full p-1"></i>
                         </div>
                         <h5 class="font-bold text-gray-700 text-sm">Viaje Sonoro</h5>
-                        <p class="text-xs text-gray-400 text-center">Refugio del Mar</p>
+                        <p class="text-xs text-gray-500 text-center">Refugio del Mar</p>
                     </div>
 
                     <!-- Tarjeta 2: Entrenamiento (Respiración) -->
@@ -291,7 +398,7 @@
                             <i class="fa-solid fa-wind"></i>
                         </div>
                         <h5 class="font-bold text-gray-700 text-sm">Entrenamiento</h5>
-                        <p class="text-xs text-gray-400 text-center">Respiración</p>
+                        <p class="text-xs text-gray-500 text-center">Respiración</p>
                     </div>
 
                     <!-- Tarjeta 3: Comunidad / Historias -->
@@ -300,7 +407,7 @@
                             <i class="fa-solid fa-images"></i>
                         </div>
                         <h5 class="font-bold text-gray-700 text-sm">Historias</h5>
-                        <p class="text-xs text-gray-400 text-center">Otros Navegantes</p>
+                        <p class="text-xs text-gray-500 text-center">Otros Navegantes</p>
                     </div>
 
                     <!-- Tarjeta 4: Evaluación / Logros -->
@@ -330,31 +437,31 @@
 
     <!-- Modal 1: Check-in Emocional (La interacción principal) -->
     <div id="checkin-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60" style="backdrop-filter: blur(10px);">
-        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl text-center">
+        <div class="bg-white max-w-md w-full p-8 shadow-2xl text-center" style="border-radius: var(--radius-modal);">
             <h2 class="text-2xl font-black text-gray-800 mb-2">¡Hola, Navegante!</h2>
-            <p class="text-gray-500 mb-8">¿Cómo se siente tu cuerpo en este momento?</p>
+            <p class="text-gray-600 mb-8">¿Cómo se siente tu cuerpo en este momento?</p>
             
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <!-- Opciones que representan Ecos/Emociones sin decir el nombre directamente -->
                 <button class="bg-red-50 hover:bg-red-100 border-2 border-red-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('ira')">
-                    <i class="fa-solid fa-fire text-3xl text-red-500 mb-2"></i>
+                    <i class="fa-solid fa-fire icon-fire text-3xl text-red-500 mb-2"></i>
                     <span class="font-bold text-red-700">Caliente y rápido</span>
                 </button>
                 <button class="bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('tristeza')">
-                    <i class="fa-solid fa-droplet text-3xl text-blue-500 mb-2"></i>
+                    <i class="fa-solid fa-droplet icon-droplet text-3xl text-blue-500 mb-2"></i>
                     <span class="font-bold text-blue-700">Pesado y lento</span>
                 </button>
                 <button class="bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('miedo')">
-                    <i class="fa-solid fa-bolt text-3xl text-purple-500 mb-2"></i>
+                    <i class="fa-solid fa-ghost text-3xl text-purple-500 mb-2"></i>
                     <span class="font-bold text-purple-700">Temblando</span>
                 </button>
                 <button class="bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('alegria')">
-                    <i class="fa-solid fa-sun text-3xl text-yellow-500 mb-2"></i>
+                    <i class="fa-solid fa-sun icon-sun text-3xl text-yellow-500 mb-2"></i>
                     <span class="font-bold text-yellow-700">Ligero y brillante</span>
                 </button>
             </div>
             
-            <button onclick="closeModal('checkin-modal')" class="text-gray-400 hover:text-gray-700 font-bold underline">
+            <button onclick="closeModal('checkin-modal')" class="text-gray-500 hover:text-gray-700 font-bold underline">
                 Cerrar por ahora
             </button>
         </div>
@@ -362,7 +469,7 @@
 
     <!-- Modal 2: Mensaje de Validación (Resultado del Check-in) -->
     <div id="feedback-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60" style="backdrop-filter: blur(10px);">
-        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl text-center">
+        <div class="bg-white max-w-md w-full p-8 shadow-2xl text-center" style="border-radius: var(--radius-modal);">
             <div id="feedback-icon" class="text-5xl mb-4"></div>
             <h2 id="feedback-title" class="text-2xl font-black text-gray-800 mb-4"></h2>
             <p id="feedback-text" class="text-gray-600 text-lg mb-8"></p>
@@ -370,7 +477,7 @@
             <button onclick="openBreatheExercise(true)" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 rounded-xl transition-colors mb-3">
                 Hacer ejercicio de anclaje
             </button>
-            <button onclick="closeModal('feedback-modal')" class="text-gray-400 hover:text-gray-700 font-bold underline">
+            <button onclick="closeModal('feedback-modal')" class="text-gray-500 hover:text-gray-700 font-bold underline">
                 Volver al menú
             </button>
         </div>
@@ -396,7 +503,7 @@
 
     <!-- Modal 4: Mensaje Genérico -->
     <div id="message-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60" style="backdrop-filter: blur(10px);">
-        <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl text-center border-b-4 border-purple-500">
+        <div class="bg-white max-w-sm w-full p-8 shadow-2xl text-center border-b-4 border-purple-500" style="border-radius: var(--radius-modal);">
             <div id="message-icon" class="text-5xl mb-4 text-purple-500"><i class="fa-solid fa-star"></i></div>
             <h2 id="message-title" class="text-2xl font-black text-gray-800 mb-4"></h2>
             <p id="message-text" class="text-gray-600 text-lg mb-8 font-medium"></p>
@@ -478,12 +585,12 @@
 
     <!-- Modal 7: Cartografía Emocional -->
     <div id="map-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/70 backdrop-blur-sm">
-        <div class="bg-white rounded-[2.5rem] max-w-2xl w-full p-8 shadow-2xl relative overflow-hidden">
+        <div class="bg-white max-w-2xl w-full p-8 shadow-2xl relative overflow-hidden" style="border-radius: var(--radius-hero);">
             <!-- Decoración de fondo -->
             <div class="absolute -right-16 -top-16 w-48 h-48 bg-purple-100 rounded-full opacity-50"></div>
             <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-blue-50 rounded-full opacity-50"></div>
             
-            <button onclick="closeModal('map-modal')" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600 text-2xl z-10 bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm">
+            <button onclick="closeModal('map-modal')" class="absolute top-6 right-6 text-gray-500 hover:text-gray-700 text-2xl z-10 bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             
@@ -523,8 +630,8 @@
 
     <!-- Modal 8: Corpografía (Mapeo Corporal) -->
     <div id="corpography-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-orange-50/95 backdrop-blur-md">
-        <div class="max-w-3xl w-full bg-white rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden flex flex-col md:flex-row gap-8">
-            <button onclick="closeModal('corpography-modal')" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600 text-2xl z-20 bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center shadow-sm">
+        <div class="max-w-3xl w-full bg-white p-8 shadow-2xl relative overflow-hidden flex flex-col md:flex-row gap-8" style="border-radius: var(--radius-hero);">
+            <button onclick="closeModal('corpography-modal')" class="absolute top-6 right-6 text-gray-500 hover:text-gray-700 text-2xl z-20 bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center shadow-sm">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             
@@ -563,7 +670,7 @@
                         <i class="fa-solid fa-droplet text-blue-500 text-xl"></i> <span class="font-bold text-blue-700 text-sm">Agua (Tristeza)</span>
                     </button>
                     <button class="bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 p-3 rounded-xl flex items-center gap-2 transition-transform hover:scale-105" onclick="assignEmotionToBody('purple', 'Miedo')">
-                        <i class="fa-solid fa-bolt text-purple-500 text-xl"></i> <span class="font-bold text-purple-700 text-sm">Rayo (Miedo)</span>
+                        <i class="fa-solid fa-ghost text-purple-500 text-xl"></i> <span class="font-bold text-purple-700 text-sm">Fantasma (Miedo)</span>
                     </button>
                     <button class="bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 p-3 rounded-xl flex items-center gap-2 transition-transform hover:scale-105" onclick="assignEmotionToBody('yellow', 'Alegría')">
                         <i class="fa-solid fa-sun text-yellow-500 text-xl"></i> <span class="font-bold text-yellow-700 text-sm">Luz (Alegría)</span>
@@ -728,7 +835,7 @@
                 text.innerHTML = "Sientes pesadez. Tu cuerpo te está pidiendo <strong>una pausa para sanar</strong> porque algo te dolió. Es de valientes llorar y pedir un abrazo.";
                 title.className = "text-2xl font-black text-blue-600 mb-4";
             } else if (type === 'miedo') {
-                icon.innerHTML = '<i class="fa-solid fa-bolt text-purple-500"></i>';
+                icon.innerHTML = '<i class="fa-solid fa-ghost text-purple-500"></i>';
                 title.innerText = "¡El Guardián del Escudo!";
                 text.innerHTML = "Estás temblando porque tu cuerpo se prepara para <strong>protegerte de algo nuevo o peligroso</strong>. Dile a tu Guardián que tú estás a salvo ahora.";
                 title.className = "text-2xl font-black text-purple-600 mb-4";
