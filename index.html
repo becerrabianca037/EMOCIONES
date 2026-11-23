@@ -77,6 +77,12 @@
             --audio-grad-top: #0c4a6e;    --audio-grad-bottom: #082f49;
             --stories-grad-top: #fff7ed;  --stories-grad-bottom: #fde9c8;
             --stories-text: #92400e;
+
+            /* Atardeceres recreados en CSS para rellenar los glifos (opción B).
+               Cálido (playa): dorado -> naranja -> magenta -> violeta.
+               Frío (crepúsculo): azul profundo -> morado -> rosa/coral. */
+            --sunset-warm: linear-gradient(135deg, #ffd27d 0%, #ff9a3c 32%, #ff5e8a 66%, #a04ce0 100%);
+            --sunset-cool: linear-gradient(135deg, #1b2a6b 0%, #3d2a7a 34%, #7b3f9d 66%, #ff6b8a 100%);
         }
 
         /* --- TEMA ÁMBAR (lectura cálida / filtro de luz azul) --- */
@@ -108,6 +114,11 @@
             --audio-grad-top: #5c3a1c;    --audio-grad-bottom: #3a2410;
             --stories-grad-top: #fdf1dd;  --stories-grad-bottom: #f6e0bd;
             --stories-text: #92400e;
+
+            /* El tema ámbar conserva los atardeceres cálidos; el frío se calienta
+               un poco para no chocar con las superficies color miel. */
+            --sunset-warm: linear-gradient(135deg, #ffd98f 0%, #ff9a3c 32%, #ff5e8a 66%, #b05ae6 100%);
+            --sunset-cool: linear-gradient(135deg, #3a3f8f 0%, #6b3f9d 34%, #a05ac0 66%, #ff7d95 100%);
         }
 
         /* --- TEMA OSCURO (baja luz) --- */
@@ -139,6 +150,11 @@
             --audio-grad-top: #061a2b;    --audio-grad-bottom: #020a12;
             --stories-grad-top: #2a2416;  --stories-grad-bottom: #1c1810;
             --stories-text: #fcd34d;
+
+            /* En oscuro se elevan los tonos iniciales para que los atardeceres
+               sigan brillando sobre superficies muy oscuras. */
+            --sunset-warm: linear-gradient(135deg, #ffde96 0%, #ffab52 32%, #ff6f98 66%, #b86bf0 100%);
+            --sunset-cool: linear-gradient(135deg, #4a5bc0 0%, #7b55c8 34%, #b06ad0 66%, #ff85a0 100%);
         }
 
         body {
@@ -337,10 +353,12 @@
         }
 
         /* Animaciones sutiles para iconos de emociones en el check-in (mejora 1)
-           Calmas y lentas: respiración de opacidad/escala, sin movimientos bruscos. */
-        .icon-fire { animation: icon-breathe 4s ease-in-out infinite; transform-origin: center; }
-        .icon-droplet { animation: icon-drip 4.5s ease-in-out infinite; transform-origin: center top; }
-        .icon-sun { animation: icon-sway 12s ease-in-out infinite; transform-origin: center; }
+           Calmas y lentas: respiración de opacidad/escala, sin movimientos bruscos.
+           Cada glifo combina DOS animaciones: su transformación original
+           (breathe/drip/sway) + una deriva lenta del degradado de atardecer. */
+        .icon-fire { animation: icon-breathe 4s ease-in-out infinite, sunset-drift 11s ease-in-out infinite; transform-origin: center; }
+        .icon-droplet { animation: icon-drip 4.5s ease-in-out infinite, sunset-drift 13s ease-in-out infinite; transform-origin: center top; }
+        .icon-sun { animation: icon-sway 12s ease-in-out infinite, sunset-drift 10s ease-in-out infinite; transform-origin: center; }
         @keyframes icon-breathe {
             0%, 100% { transform: scale(1); opacity: 0.95; }
             50% { transform: scale(1.06); opacity: 1; }
@@ -353,6 +371,39 @@
         @keyframes icon-sway {
             0%, 100% { transform: rotate(-6deg); }
             50% { transform: rotate(6deg); }
+        }
+
+        /* --- Relleno de atardecer para glifos FontAwesome (opción B) ---
+           El degradado se recorta a la forma del glifo (background-clip: text) y,
+           al ser más grande que la caja (background-size 200%), puede desplazarse
+           lentamente con sunset-drift para que los colores del atardecer floten.
+           Si el recorte de texto fallara en un motor antiguo, el tinte del chip
+           .emotion-icon sigue comunicando la emoción (degradación elegante). */
+        .icon-sunset {
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            background-size: 200% 200%;
+            background-position: 0% 50%;
+            background-repeat: no-repeat;
+        }
+        .icon-sunset-warm { background-image: var(--sunset-warm); }
+        .icon-sunset-cool { background-image: var(--sunset-cool); }
+        /* El glifo del miedo (fantasma) no tenía transformación: se le da un
+           flotar muy leve, dentro del mismo vocabulario calmado, + deriva. */
+        .icon-ghost { animation: icon-float 5s ease-in-out infinite, sunset-drift 12s ease-in-out infinite; transform-origin: center; }
+        @keyframes icon-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2.5px); }
+        }
+        /* Icono de reproducción del tablero central: solo deriva del atardecer
+           (sin transformación, el tablero ya tiene su propio brillo pulsante). */
+        .icon-play-drift { animation: sunset-drift 12s ease-in-out infinite; }
+        /* Deriva suave del degradado: mismo carácter calmado que breathe/sway. */
+        @keyframes sunset-drift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         /* Glassmorphism coherente (mejora B): fondo semitransparente + desenfoque
@@ -581,7 +632,7 @@
             .hill-back, .hill-mid, .hill-front,
             .character,
             .char-eye,
-            .icon-fire, .icon-droplet, .icon-sun,
+            .icon-fire, .icon-droplet, .icon-sun, .icon-ghost, .icon-play-drift,
             .mission-board,
             .btn-breathe,
             .audio-wave,
@@ -711,7 +762,7 @@
             <!-- Centro: Pizarra interactiva / Portal (CTA destacado) -->
             <div class="mission-board themed-surface relative z-10 w-80 h-56 flex flex-col items-center justify-center p-6 cursor-pointer transition-transform" style="border: 4px solid var(--glass-border);" onclick="startCheckIn()">
                 <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4" style="background: var(--surface-soft);">
-                    <i class="fa-solid fa-play text-2xl ml-1" style="color: var(--accent);"></i>
+                    <i class="fa-solid fa-play text-2xl ml-1 icon-sunset icon-sunset-warm icon-play-drift" style="color: var(--accent);"></i>
                 </div>
                 <h3 class="text-xl font-bold text-center" style="color: var(--text-strong);">Inicia tu<br>Misión de Hoy</h3>
                 <p class="text-sm mt-2" style="color: var(--text-muted);">Haz clic aquí</p>
@@ -814,19 +865,19 @@
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <!-- Opciones que representan Ecos/Emociones sin decir el nombre directamente -->
                 <button class="bg-red-50 hover:bg-red-100 border-2 border-red-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('ira')">
-                    <span class="emotion-icon bg-red-100 text-red-500 mb-2"><i class="fa-solid fa-fire fa-fw icon-fire"></i></span>
+                    <span class="emotion-icon bg-red-100 text-red-500 mb-2"><i class="fa-solid fa-fire fa-fw icon-fire icon-sunset icon-sunset-warm"></i></span>
                     <span class="font-bold text-red-700">Caliente y rápido</span>
                 </button>
                 <button class="bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('tristeza')">
-                    <span class="emotion-icon bg-blue-100 text-blue-500 mb-2"><i class="fa-solid fa-droplet fa-fw icon-droplet"></i></span>
+                    <span class="emotion-icon bg-blue-100 text-blue-500 mb-2"><i class="fa-solid fa-droplet fa-fw icon-droplet icon-sunset icon-sunset-cool"></i></span>
                     <span class="font-bold text-blue-700">Pesado y lento</span>
                 </button>
                 <button class="bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('miedo')">
-                    <span class="emotion-icon bg-purple-100 text-purple-500 mb-2"><i class="fa-solid fa-ghost fa-fw"></i></span>
+                    <span class="emotion-icon bg-purple-100 text-purple-500 mb-2"><i class="fa-solid fa-ghost fa-fw icon-ghost icon-sunset icon-sunset-cool"></i></span>
                     <span class="font-bold text-purple-700">Temblando</span>
                 </button>
                 <button class="bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 p-4 rounded-2xl transition-colors flex flex-col items-center" onclick="showFeedback('alegria')">
-                    <span class="emotion-icon bg-yellow-100 text-yellow-600 mb-2"><i class="fa-solid fa-sun fa-fw icon-sun"></i></span>
+                    <span class="emotion-icon bg-yellow-100 text-yellow-600 mb-2"><i class="fa-solid fa-sun fa-fw icon-sun icon-sunset icon-sunset-warm"></i></span>
                     <span class="font-bold text-yellow-700">Ligero y brillante</span>
                 </button>
             </div>
